@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-06-21
+
 ### Added
 - Core fail-open reduction pipeline with deterministic output and per-content-type
   fidelity scoring (json, diff, and stack-trace reductions are verified, not assumed).
@@ -26,4 +28,5 @@ All notable changes to this project are documented here. The format is based on
 - Targets Python 3.14; ruff, mypy, and coverage run in CI; examples, contributor, and
   security docs included.
 
-[Unreleased]: https://github.com/pankajniet/LeanContext
+[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.0

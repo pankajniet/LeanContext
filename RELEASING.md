@@ -1,45 +1,45 @@
 # Releasing LeanContext
 
-A short checklist for cutting a release to PyPI. Building and metadata checks are
-done; the only step that needs your credentials is the final upload.
+The smooth path uses **PyPI Trusted Publishing**: GitHub Actions publishes to PyPI over
+OIDC, so there are no API tokens to create, store, or paste. You set it up once, then every
+release is just "publish a GitHub Release."
 
-## 1. Pre-release checks
+## One-time setup
 
-```bash
-ruff check leancontext bench.py demo.py
-mypy leancontext
-pytest -q
-python bench.py        # sanity-check the numbers in the README
-```
+On PyPI, register this repo as a trusted publisher (works before the project exists):
 
-## 2. Set the version
+1. Open <https://pypi.org/manage/account/publishing/>.
+2. Under **Add a new pending publisher**, enter:
+   - PyPI Project Name: `leancontext`
+   - Owner: `pankajniet`
+   - Repository name: `LeanContext`
+   - Workflow name: `publish.yml`
+   - Environment: *(leave blank)*
+3. Save.
 
-Bump `version` in `pyproject.toml` (first public release is usually `0.1.0`) and move the
-`CHANGELOG.md` entries from `[Unreleased]` into a dated section for that version.
+The workflow lives at `.github/workflows/publish.yml` and runs when a GitHub Release is published.
 
-## 3. Build and validate
+## Cutting a release
+
+1. Bump `version` in `pyproject.toml` and move the `CHANGELOG.md` entries from `[Unreleased]`
+   into a dated section.
+2. Sanity-check, then commit and push to `main`:
+   ```bash
+   ruff check leancontext && mypy leancontext && pytest -q
+   git push
+   ```
+3. On GitHub: **Releases → Draft a new release → tag `vX.Y.Z` → Publish.**
+
+Publishing the release triggers `publish.yml`, which builds the wheel + sdist and uploads them
+to PyPI. After it finishes, `pip install leancontext` works.
+
+## Manual fallback (token-based)
+
+If you ever need to publish from your machine instead:
 
 ```bash
 rm -rf dist
-uv build                     # or: python -m build
-uvx twine check dist/*       # or: twine check dist/*
-```
-
-Both the wheel and sdist should report `PASSED`. The wheel includes `py.typed` and every
-submodule.
-
-## 4. Upload
-
-Test on TestPyPI first, then the real index (needs a PyPI API token):
-
-```bash
-uvx twine upload --repository testpypi dist/*
-uvx twine upload dist/*
-```
-
-## 5. Tag
-
-```bash
-git tag v0.1.0
-git push origin v0.1.0
+uv build
+uvx twine check dist/*
+uvx twine upload dist/*      # username = __token__   password = <your PyPI token>
 ```

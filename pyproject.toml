@@ -1,6 +1,6 @@
 [project]
 name = "leancontext"
-version = "0.0.1"
+version = "2.0.0"
 description = "Deterministic, type-aware reduction of agent tool outputs at the source. Cut LLM token cost without making the agent do less."
 readme = "README.md"
 requires-python = ">=3.14"
@@ -8,7 +8,7 @@ license = { text = "Apache-2.0" }
 authors = [{ name = "Pankaj Pandey" }]
 keywords = ["llm", "agents", "tokens", "cost", "context", "compression", "rag"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
