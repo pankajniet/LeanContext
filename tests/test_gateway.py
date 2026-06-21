@@ -73,7 +73,7 @@ def test_proxy_reduces_before_forwarding():
 
     captured = {}
 
-    def fake_forward(payload):
+    def fake_forward(payload, headers):
         captured.update(payload)
         return {"id": "x", "ok": True}
 
