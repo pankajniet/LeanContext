@@ -205,7 +205,7 @@ def _compute(original: str, before: int, ref: str, kind: str,
 
     after = count_tokens(text)
     saving = 0.0 if before == 0 else 1.0 - after / before
-    fid = fidelity_score(original, text)
+    fid = fidelity_score(original, text, detected)
 
     if saving < min_saving or fid < min_fidelity:
         notes.append(f"reverted: saving={saving:.0%}, fidelity={fid:.0%} (below threshold)")
