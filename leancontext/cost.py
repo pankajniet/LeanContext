@@ -1,14 +1,14 @@
-"""Cache-impact accounting — turn savings into a visible number.
+"""Cost accounting: turn token savings into dollars.
 
-Two honest facts we surface that the incumbent doesn't:
-1. **$ saved**, computed from input-token price (input dominates agent cost).
-2. **cache-safe = True**: because reductions are deterministic and content-addressed,
-   a reduced block serialises to identical bytes every turn, so the provider
-   prompt-cache prefix is preserved (we never bust the ~90% cache discount).
+Reports two things:
+1. Dollars saved, from the input-token price (input dominates agent cost).
+2. ``cache_safe = True``: reductions are deterministic and content-addressed, so a
+   reduced block serialises to the same bytes every turn and the provider's
+   prompt-cache prefix stays intact.
 
-Prices change often, so the table is intentionally tiny and overridable. Pass an
-explicit ``input_price_per_mtok`` or register prices with :func:`set_price`.
-Unknown model + no price → token savings reported, ``usd_saved`` is ``None``.
+Prices change often, so the built-in table is small and overridable: pass an
+explicit ``input_price_per_mtok`` or register prices with :func:`set_price`. With
+no known price, token savings are still reported and ``usd_saved`` is ``None``.
 """
 
 from __future__ import annotations

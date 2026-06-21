@@ -1,15 +1,15 @@
-"""Log reducer — the hero.
+"""Collapse repetitive log lines.
 
-Strategy: collapse near-identical lines into one representative + a count, while
-keeping every anomaly/error line and every *unique* pattern verbatim.
+Near-identical lines collapse to one representative plus a count, while every
+error/anomaly line and every one-off pattern is kept as-is.
 
-How "near-identical" is decided: we mask the volatile parts of each line
-(timestamps, ips, uuids, hex, numbers, quoted strings) to form a *template*.
-Lines sharing a template are the same event repeated with different values, so we
-keep one and count the rest. Templates that occur once, or that carry a severity
-keyword, are always kept verbatim — the rare line is the signal.
+To decide "near-identical", we mask the volatile parts of a line (timestamps, ips,
+uuids, hex, numbers, quoted strings) into a template. Lines that share a template
+are the same event with different values, so we keep one and count the rest.
+Templates seen only once, or carrying a severity keyword, are kept verbatim, since
+the rare line is usually the one that matters.
 
-Deterministic: dict preserves first-seen order; identical input → identical output.
+Deterministic: first-seen order is preserved, so the same input gives the same output.
 """
 
 from __future__ import annotations

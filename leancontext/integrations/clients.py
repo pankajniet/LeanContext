@@ -1,9 +1,10 @@
-"""Real SDK client wrappers — OpenAI & Anthropic.
+"""SDK client wrappers for OpenAI, Anthropic, and Gemini.
 
-Wraps ``client.chat.completions.create`` (OpenAI) / ``client.messages.create``
-(Anthropic) so tool outputs in the outbound ``messages`` are reduced on the wire.
-Contract-preserving and fail-open: if anything is unexpected, the original call
-runs untouched. Reductions are deterministic, so the prompt-cache prefix stays stable.
+Wraps the provider's call (OpenAI ``chat.completions.create``, Anthropic
+``messages.create``, Gemini ``models.generate_content``) so tool outputs in the
+outbound request are reduced before they're sent. Contract-preserving and
+fail-open: anything unexpected leaves the original call untouched. Reductions are
+deterministic, so the prompt-cache prefix stays stable.
 """
 
 from __future__ import annotations

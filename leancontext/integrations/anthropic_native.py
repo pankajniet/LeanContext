@@ -1,8 +1,8 @@
-"""Anthropic provider-native interop — the headline differentiator.
+"""Run LeanContext's reduction alongside Anthropic's native context editing.
 
-LeanContext compresses tool outputs *by content* on the way in. Anthropic's native
-context editing clears old tool results *by age* once the window grows. They are
-complementary, and this module makes them run **together** on one client:
+LeanContext reduces tool outputs by content on the way in; Anthropic's context
+editing clears old tool results by age as the window grows. They're complementary,
+and this module turns both on for one client:
 
     from leancontext.integrations.anthropic_native import wrap_anthropic_native
     client = wrap_anthropic_native(anthropic.Anthropic(),

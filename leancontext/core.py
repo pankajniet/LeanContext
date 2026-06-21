@@ -1,8 +1,8 @@
-"""Core: dispatch, type detection, the Reduction result, and the fail-open guard.
+"""Dispatch, type detection, the Reduction result, and the fail-open guard.
 
-The cardinal rule (see AGENTS.md §5C): LeanContext can only ever *help or no-op*. If the
-type is unknown, a reducer raises, the saving is too small, or fidelity is too low,
-we return the ORIGINAL text unchanged. Nothing here can corrupt an agent workflow.
+LeanContext never breaks the caller. If the content type is unknown, a reducer
+raises, or the saving or fidelity falls below the configured threshold, we return
+the original text unchanged.
 """
 
 from __future__ import annotations

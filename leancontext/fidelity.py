@@ -1,14 +1,12 @@
-"""Measurable safety.
+"""Fidelity scoring: did the signal survive the reduction?
 
-Fidelity answers one question: *did the signal survive the reduction?*
+"Signal" here means the things an agent shouldn't lose: error/anomaly lines and
+the values on them (ids, hex addresses, file paths, numbers, quoted strings).
+Routine high-frequency noise (most INFO logs) isn't counted as signal, since
+collapsing it is what we want.
 
-We define "signal" as the things an agent must not silently lose: anomaly/error
-lines, and the load-bearing values that appear on them (ids, hex addresses,
-file paths, numbers, quoted strings). Routine, high-frequency noise (the bulk of
-INFO logs) is intentionally NOT counted as signal — collapsing it is the point.
-
-A reducer that drops an error line or mangles an id on an error line will score
-low and be reverted by the core (fail-open). That is the guarantee.
+If a reducer drops an error line or mangles an id on one, the score falls and the
+core reverts to the original.
 """
 
 from __future__ import annotations

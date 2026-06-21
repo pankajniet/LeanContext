@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 180" role="img" aria-label="LeanContext">
+  <title>LeanContext</title>
+  <g fill="none" stroke-linecap="round">
+    <!-- motion trail: tokens being streamed and trimmed -->
+    <g stroke-width="9">
+      <line x1="42" y1="46"  x2="120" y2="46"  stroke="#102A4C"/>
+      <line x1="20" y1="69"  x2="100" y2="69"  stroke="#2B8A9E"/>
+      <line x1="36" y1="92"  x2="112" y2="92"  stroke="#2B8A9E"/>
+      <line x1="18" y1="115" x2="96"  y2="115" stroke="#102A4C"/>
+      <line x1="46" y1="138" x2="122" y2="138" stroke="#102A4C"/>
+    </g>
+    <!-- curves sweeping the trail into the monogram -->
+    <path d="M120 46  C 168 46, 196 62, 206 86"  stroke="#102A4C" stroke-width="9"/>
+    <path d="M122 138 C 168 138, 196 122, 206 98" stroke="#102A4C" stroke-width="9"/>
+    <!-- lc monogram -->
+    <path d="M242 52 L242 122 L274 122" stroke="#102A4C" stroke-width="13" stroke-linejoin="round"/>
+    <path d="M320 80 A 27 27 0 1 0 320 116" stroke="#2B8A9E" stroke-width="13"/>
+  </g>
+  <text x="372" y="116" font-family="Helvetica, Arial, sans-serif" font-size="80" font-weight="700">
+    <tspan fill="#102A4C">Lean</tspan><tspan fill="#2B8A9E">Context</tspan>
+  </text>
+</svg>

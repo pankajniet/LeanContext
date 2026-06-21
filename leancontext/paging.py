@@ -1,12 +1,12 @@
-"""Paging tier — flatten the quadratic for *aged* context.
+"""Paging: drop aged tool outputs from the wire, keep them retrievable.
 
-Compression shrinks the per-turn constant; paging removes aged content from the wire
-entirely. When the agent has moved on from a tool result, collapse it to a tiny
-expandable reference (~tens of tokens) and stash the original in a content store the
-agent can pull back on demand via the ``expand`` tool.
+Reducing shrinks each payload; paging goes further by removing old payloads from
+context once the agent has moved on. The output is replaced with a small reference
+(a few tens of tokens) and the original is stored, so the agent can fetch it back
+with the expand tool when it needs the detail again.
 
-Refs are content hashes, so they're deterministic and re-derivable. The store is
-in-memory by default, or disk-backed (under ``root``) for cross-process retrieval.
+Refs are content hashes, so they're deterministic. The store is in-memory by
+default, or disk-backed (set ``root``) for retrieval across processes.
 """
 
 from __future__ import annotations

@@ -1,10 +1,16 @@
-# LeanContext
+<p align="center">
+  <img src="assets/logo.svg" alt="LeanContext" width="440">
+</p>
 
-**Cut the cost of AI agents by shrinking what they send to the model — deterministically, safely, and without making the agent do less.**
+<p align="center">
+  Cut the cost of AI agents by shrinking what they send to the model, without making the agent do less.
+</p>
 
-LeanContext reduces the bloated tool outputs (logs, JSON/RAG, diffs, stack traces, HTML) that agents re-send to the model on every turn. It runs **at the source** (where the content's type is still known), is **deterministic** (so it never breaks the provider's prompt cache), reports a **fidelity score** on every reduction, and is **fail-open** — it can only ever help or no-op, never corrupt the agent's context.
+---
 
-> Status: early (v0). Apache-2.0. Python 3.10+. Zero required dependencies in the core path.
+LeanContext reduces the bloated tool outputs (logs, JSON/RAG, diffs, stack traces, HTML) that agents re-send to the model every turn. It works at the source, where the content's type is still known. It stays deterministic, so it doesn't break the provider's prompt cache. It reports a fidelity score on every reduction. And it's fail-open: it can only help or no-op, never corrupt the agent's context.
+
+> Status: early (v0). Apache-2.0. Python 3.10+. No required dependencies in the core path.
 
 ---
 
@@ -62,11 +68,11 @@ client = leancontext.wrap(openai_client)        # or wrap_openai / wrap_anthropi
 | Surface | How |
 |---|---|
 | Decorator / tools | `@leancontext.reduce`, `leancontext.wrap(tools)` |
-| OpenAI / Anthropic SDK | `leancontext.wrap_openai(client)` / `wrap_anthropic(client)` |
+| OpenAI / Anthropic / Gemini SDK | `wrap_openai(client)` / `wrap_anthropic(client)` / `wrap_gemini(client)` |
 | LiteLLM (proxy) | `litellm_settings: callbacks: leancontext.integrations.litellm.proxy_handler_instance` |
 | LiteLLM (SDK) | `import leancontext.integrations.litellm as ll; ll.patch()` |
 | Standalone proxy | `from leancontext.integrations.proxy import create_app` (OpenAI-compatible, any language) |
-| Wire/messages | `leancontext.reduce_messages(messages)` (OpenAI + Anthropic formats) |
+| Wire/messages | `leancontext.reduce_messages(messages)` (OpenAI, Anthropic, Gemini formats) |
 | OpenTelemetry | `import leancontext.integrations.otel as o; o.instrument()` |
 | Anthropic native | `from leancontext.integrations.anthropic_native import wrap_anthropic_native` |
 
