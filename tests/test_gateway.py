@@ -127,6 +127,20 @@ def test_proxy_reduces_before_forwarding():
     assert len(sent) < len(_big_log()) and "root cause" in sent
 
 
+# --- gateway helper: chat (messages) vs Responses (input) --------------------
+
+def test_reduce_messages_in_handles_responses_input_key():
+    # Gateway paths use key=None so a Responses request (input=) reduces too, not
+    # just chat (messages=). No third-party dependency needed for this logic.
+    from leancontext.integrations._common import reduce_messages_in
+
+    data = {"model": "gpt-4o",
+            "input": [{"type": "function_call_output", "call_id": "c", "output": _big_log()}]}
+    reduce_messages_in(data, "auto", {}, key=None)
+    sent = data["input"][0]["output"]
+    assert len(sent) < len(_big_log()) and "root cause" in sent
+
+
 # --- LiteLLM (real CustomLogger) ---------------------------------------------
 
 def test_litellm_pre_call_hook_reduces():

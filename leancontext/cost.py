@@ -13,6 +13,7 @@ no known price, token savings are still reported and ``usd_saved`` is ``None``.
 
 from __future__ import annotations
 
+import threading
 from collections.abc import Callable
 
 #: USD per 1M tokens (input, output). Indicative — override via set_price().
@@ -71,14 +72,17 @@ class CostTracker:
         self.usd_saved = 0.0
         self.has_price = _input_price(model, input_price_per_mtok) is not None
         self._hook: Callable | None = None
+        self._lock = threading.Lock()
 
     def _on(self, r) -> None:
-        self.reductions += 1
-        self.tokens_before += r.tokens_before
-        self.tokens_after += r.tokens_after
-        self.tokens_saved += r.tokens_saved
-        if self.has_price:
-            self.usd_saved += estimate_savings(r, self.model, self.price)["usd_saved"]
+        # The hook fires from every reducing thread, so guard the running totals.
+        usd = estimate_savings(r, self.model, self.price)["usd_saved"] if self.has_price else 0.0
+        with self._lock:
+            self.reductions += 1
+            self.tokens_before += r.tokens_before
+            self.tokens_after += r.tokens_after
+            self.tokens_saved += r.tokens_saved
+            self.usd_saved += usd
 
     def install(self) -> CostTracker:
         from .core import on_reduction

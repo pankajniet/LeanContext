@@ -41,6 +41,16 @@ def test_json_columnar_is_lossless_on_values():
     for i in range(20):
         assert f"n{i}" in r.text           # every value preserved
 
+
+def test_json_columnar_handles_delimiter_and_newline_values():
+    # Values containing the column delimiter or a newline must not corrupt rows:
+    # each row must parse back to exactly its original fields (regression test).
+    records = [{"id": i, "text": f"row {i} | part A\nrow {i} part B", "n": i} for i in range(10)]
+    r = leancontext.reduce(json.dumps(records))
+    assert r.kind == "json"                 # reduction applied, not reverted
+    rows = [json.loads(line) for line in r.text.splitlines()[1:]]  # skip the fields header
+    assert rows == [[i, f"row {i} | part A\nrow {i} part B", i] for i in range(10)]
+
 def test_decorator_preserves_contract():
     @leancontext.reduce
     def tool(_: str) -> str:

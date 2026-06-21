@@ -63,6 +63,28 @@ def test_responses_format_reduced():
     assert len(reduced) < len(_log()) and "root cause" in reduced
 
 
+def test_mixed_format_list_reduces_every_item():
+    # A chat tool message AND a Responses function_call_output in one list: auto
+    # dispatch must reduce both, not just the format of the first message seen.
+    items = [
+        {"role": "tool", "tool_call_id": "c1", "content": _log()},
+        {"type": "function_call_output", "call_id": "c2", "output": _log()},
+    ]
+    out = reduce_messages(items)
+    assert len(out[0]["content"]) < len(_log()) and "root cause" in out[0]["content"]
+    assert len(out[1]["output"]) < len(_log()) and "root cause" in out[1]["output"]
+
+
+def test_responses_list_shaped_output_reduced():
+    items = [
+        {"type": "function_call_output", "call_id": "c1",
+         "output": [{"type": "output_text", "text": _log()}]},
+    ]
+    out = reduce_messages(items)
+    reduced = out[0]["output"][0]["text"]
+    assert len(reduced) < len(_log()) and "root cause" in reduced
+
+
 def test_non_list_passthrough():
     assert reduce_messages("not a list") == "not a list"
 

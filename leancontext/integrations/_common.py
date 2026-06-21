@@ -25,19 +25,30 @@ def mark(fn: Callable) -> Callable:
     return fn
 
 
-def reduce_messages_in(mapping: Any, fmt: str, opts: dict, key: str = "messages") -> None:
-    """Fail-open, in-place reduction of ``mapping[key]`` (dict-like).
+#: Request keys that can carry a message/tool-output list across providers:
+#: ``messages`` (OpenAI chat / Anthropic), ``input`` (OpenAI Responses API).
+_LIST_KEYS = ("messages", "input")
 
-    ``key`` is ``messages`` for OpenAI/Anthropic, ``contents`` for Gemini.
+
+def reduce_messages_in(mapping: Any, fmt: str, opts: dict, key: str | None = "messages") -> None:
+    """Fail-open, in-place reduction of the message list(s) in ``mapping`` (dict-like).
+
+    ``key`` names the field to reduce (``messages`` for OpenAI/Anthropic). Pass
+    ``key=None`` to reduce whichever known list keys are present — used on gateway
+    paths (LiteLLM) where a request may be chat (``messages``) or Responses (``input``).
     """
-    if isinstance(mapping, dict) and isinstance(mapping.get(key), list):
-        try:
-            mapping[key] = reduce_messages(mapping[key], fmt=fmt, **opts)
-        except Exception:
-            pass  # fail open
+    if not isinstance(mapping, dict):
+        return
+    keys = _LIST_KEYS if key is None else (key,)
+    for k in keys:
+        if isinstance(mapping.get(k), list):
+            try:
+                mapping[k] = reduce_messages(mapping[k], fmt=fmt, **opts)
+            except Exception:
+                pass  # fail open
 
 
-def wrap_messages_create(create: Callable, *, fmt: str, opts: dict, key: str = "messages",
+def wrap_messages_create(create: Callable, *, fmt: str, opts: dict, key: str | None = "messages",
                          reduce: bool = True,
                          before: Callable[[dict], None] | None = None) -> Callable:
     """Wrap a ``create(**kwargs)`` callable to reduce its messages before calling through.

@@ -125,13 +125,18 @@ def _reduce_gemini_message(content: Any, opts: dict) -> Any:
 # type "function_call_output" whose `output` is a string.
 
 def _reduce_responses_message(item: Any, opts: dict) -> Any:
-    if (
-        isinstance(item, dict)
-        and item.get("type") == "function_call_output"
-        and isinstance(item.get("output"), str)
-    ):
+    if not isinstance(item, dict) or item.get("type") != "function_call_output":
+        return item
+    output = item.get("output")
+    if isinstance(output, str):
         new_item = dict(item)
-        new_item["output"] = _reduce_str(item["output"], opts)
+        new_item["output"] = _reduce_str(output, opts)
+        return new_item
+    # The Responses API also allows a list of content parts (e.g. output_text);
+    # reduce those the same way as chat parts. Anything else passes through.
+    if isinstance(output, list):
+        new_item = dict(item)
+        new_item["output"] = [_reduce_openai_part(p, opts) for p in output]
         return new_item
     return item
 
@@ -180,6 +185,15 @@ _REDUCE_BY_NAME = {f.name: f.reduce for f in _FORMATS}
 
 # --- public ------------------------------------------------------------------
 
+def _format_for(m: Any) -> str:
+    """The format a single message belongs to (priority order); defaults to ``openai``."""
+    if isinstance(m, dict):
+        for fmt in _FORMATS:
+            if fmt.detect(m):
+                return fmt.name
+    return "openai"
+
+
 def detect_format(messages: list) -> str:
     """Best-effort detection of the message protocol; defaults to ``openai``."""
     for m in messages:
@@ -197,9 +211,14 @@ def reduce_messages(messages: Any, *, fmt: str = "auto", **opts) -> Any:
     Handles OpenAI (chat + Responses), Anthropic, and Gemini formats. Only tool-result
     content is touched; instructions are never altered. Anything unrecognised passes
     through unchanged (fail open).
+
+    With ``fmt="auto"`` each message is dispatched by its own format, so a list mixing
+    shapes (e.g. a chat tool message alongside a Responses ``function_call_output``)
+    reduces every item — not just the ones matching the first format seen.
     """
     if not isinstance(messages, list):
         return messages
-    resolved = detect_format(messages) if fmt == "auto" else fmt
-    reducer = _REDUCE_BY_NAME.get(resolved, _reduce_openai_message)
+    if fmt == "auto":
+        return [_REDUCE_BY_NAME.get(_format_for(m), _reduce_openai_message)(m, opts) for m in messages]
+    reducer = _REDUCE_BY_NAME.get(fmt, _reduce_openai_message)
     return [reducer(m, opts) for m in messages]

@@ -49,7 +49,18 @@ from .integrations import (
 from .messages import detect_format, reduce_messages
 from .tokens import active_tokenizer, count_tokens, set_token_counter, use_tiktoken
 
-__version__ = "0.0.1"
+# Single source of truth is the installed package metadata (pyproject version);
+# the literal is only a fallback for running straight from a source tree.
+try:
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as _pkg_version
+
+    try:
+        __version__ = _pkg_version("leancontext")
+    except PackageNotFoundError:
+        __version__ = "2.0.6"
+except ImportError:  # pragma: no cover - importlib.metadata is stdlib on 3.10+
+    __version__ = "2.0.6"
 
 __all__ = [
     "reduce",

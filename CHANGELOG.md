@@ -5,6 +5,26 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [2.0.6] - 2026-06-21
+
+### Fixed
+- JSON reducer is now lossless on every value: rows are emitted as JSON arrays with
+  the field names factored into the header once, so values containing the column
+  delimiter, quotes, or newlines no longer corrupt the columnar layout. The JSON
+  fidelity check matches values in their encoded form, so it sees such corruption.
+- Gateway paths (LiteLLM proxy + SDK patch) now reduce OpenAI Responses requests
+  (`input=`), not just chat (`messages=`).
+- `reduce_messages` dispatches per item, so a list mixing message formats reduces
+  every tool output instead of only those matching the first format detected.
+- OpenAI Responses tool outputs shaped as a list of content parts are now reduced.
+- `__version__` is read from the installed package metadata (was a stale `0.0.1`).
+- `CostTracker` running totals are guarded by a lock for multi-threaded agents.
+
+### Docs
+- README install commands use the published package (`pip install leancontext`),
+  document the `mcp` extra, note which tokenizer the benchmark uses, and state
+  which integrations are CI-verified vs best-effort.
+
 ## [2.0.5] - 2026-06-21
 
 ### Security
@@ -30,6 +50,11 @@ All notable changes to this project are documented here. The format is based on
 - Lower the minimum Python from 3.14 to 3.10 so the package installs on current
   interpreters (the code already supports 3.10+; CI runs 3.10 through 3.14).
 
+## [2.0.1] - 2026-06-21
+
+Intermediate release during the initial PyPI rollout (Python version metadata),
+superseded by 2.0.2. Version 2.0.3 was never published.
+
 ## [2.0.0] - 2026-06-21
 
 ### Added
@@ -53,8 +78,10 @@ All notable changes to this project are documented here. The format is based on
 - Targets Python 3.14; ruff, mypy, and coverage run in CI; examples, contributor, and
   security docs included.
 
-[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.5...HEAD
+[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.6...HEAD
+[2.0.6]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.6
 [2.0.5]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.5
 [2.0.4]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.4
 [2.0.2]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.2
+[2.0.1]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.1
 [2.0.0]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.0

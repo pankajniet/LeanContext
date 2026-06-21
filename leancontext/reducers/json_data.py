@@ -27,20 +27,22 @@ def _find_records(data: Any) -> list[dict] | None:
     return None
 
 
-def _fmt(value: Any) -> str:
-    if isinstance(value, str):
-        return value
-    return json.dumps(value, separators=(",", ":"), ensure_ascii=False)
-
-
 def reduce_json(text: str) -> tuple[str, list[str]]:
     data = json.loads(text)
     records = _find_records(data)
 
     if records is not None and len(records) >= 3:
         keys = list(dict.fromkeys(k for row in records for k in row.keys()))
-        header = "fields: " + " | ".join(keys)
-        rows = [" | ".join(_fmt(row.get(k, "")) for k in keys) for row in records]
+        # Each row is a JSON array of values in `keys` order, with the field names
+        # factored out into the header once (a missing field becomes null, keeping
+        # every row positional). JSON-encoding every cell keeps values that contain
+        # the delimiter, quotes, or newlines unambiguous and lossless — a plain
+        # " | " join would corrupt those, and the fidelity check wouldn't catch it.
+        header = "fields: " + json.dumps(keys, separators=(",", ":"), ensure_ascii=False)
+        rows = [
+            json.dumps([row.get(k) for k in keys], separators=(",", ":"), ensure_ascii=False)
+            for row in records
+        ]
         notes = [f"columnar: {len(records)} records × {len(keys)} fields, keys factored out once"]
         return header + "\n" + "\n".join(rows), notes
 

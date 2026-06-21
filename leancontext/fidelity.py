@@ -60,12 +60,22 @@ def _iter_scalars(data: Any):
 
 
 def _json_fidelity(original: str, reduced: str) -> float:
-    """Fraction of JSON scalar values (strings and numbers) preserved in the output."""
+    """Fraction of JSON scalar values (strings and numbers) preserved in the output.
+
+    Values are matched in their JSON-encoded form (the reducer emits them that way),
+    so a value containing a delimiter, quote, or newline only counts as preserved if
+    its exact escaped bytes survive — the check sees structural corruption, not just
+    whether the characters appear somewhere.
+    """
     try:
         data = json.loads(original)
     except Exception:
         return 1.0
-    values = [str(v) for v in _iter_scalars(data) if str(v)]
+    values = [
+        json.dumps(v, ensure_ascii=False).strip('"')
+        for v in _iter_scalars(data)
+    ]
+    values = [v for v in values if v]
     if not values:
         return 1.0
     kept = sum(1 for v in values if v in reduced)

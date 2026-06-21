@@ -35,7 +35,8 @@ def make_handler(**opts):
     class LeanContextHandler(CustomLogger):
         async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
             if call_type in _REDUCIBLE_CALLS:
-                reduce_messages_in(data, "auto", opts)  # fail-open in-place
+                # key=None: reduce chat (messages) or Responses (input) payloads alike
+                reduce_messages_in(data, "auto", opts, key=None)  # fail-open in-place
             return data
 
     return LeanContextHandler()
@@ -48,14 +49,14 @@ def patch(**opts) -> None:
     if getattr(litellm, "_leancontext_patched", False):
         return
 
-    litellm.completion = wrap_messages_create(litellm.completion, fmt="auto", opts=opts)
+    litellm.completion = wrap_messages_create(litellm.completion, fmt="auto", opts=opts, key=None)
 
     if hasattr(litellm, "acompletion"):
         _orig_acompletion = litellm.acompletion
 
         @functools.wraps(_orig_acompletion)
         async def acompletion(*args, **kwargs):
-            reduce_messages_in(kwargs, "auto", opts)
+            reduce_messages_in(kwargs, "auto", opts, key=None)
             return await _orig_acompletion(*args, **kwargs)
 
         litellm.acompletion = mark(acompletion)

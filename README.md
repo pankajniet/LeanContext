@@ -38,13 +38,17 @@ $ python bench.py
 sample              kind          before   after  saved  fidelity
 -----------------------------------------------------------------
 log (incident)      log            52642     100   100%      100%
-json (RAG chunks)   json            1862    1390    25%      100%
+json (RAG chunks)   json            1862    1391    25%      100%
 html (web fetch)    html            1672    1093    35%      100%
 diff (patch)        diff             639      81    87%      100%
 stacktrace          stacktrace       896      94    90%      100%
 -----------------------------------------------------------------
-TOTAL                              57711    2758    95%
+TOTAL                              57711    2759    95%
 ```
+
+Counts above use the built-in heuristic tokenizer (≈4 chars/token). Install the
+`tiktoken` extra for exact model token counts — the ratios are similar (~92% on
+this sample). The reduced text is identical either way.
 
 A real incident log, before and after:
 
@@ -82,10 +86,11 @@ errors, anomalies, and identifiers, and collapses the rest.
 ## Install
 
 ```bash
-pip install -e .                  # core, standard library only
-pip install -e ".[integrations]"  # openai, anthropic, litellm, fastapi adapters
-pip install -e ".[otel]"          # OpenTelemetry metrics
-pip install -e ".[tiktoken]"      # exact token counts (used automatically when present)
+pip install leancontext                  # core, standard library only
+pip install "leancontext[integrations]"  # openai, anthropic, litellm, fastapi adapters
+pip install "leancontext[otel]"          # OpenTelemetry metrics
+pip install "leancontext[mcp]"           # MCP server
+pip install "leancontext[tiktoken]"      # exact token counts (used automatically when present)
 ```
 
 ## Use it
@@ -130,6 +135,11 @@ r.fidelity                        # 0..1 signal preserved
 | Frameworks | LangChain, LangGraph, Agno via `wrap(tools)`; any framework via `@reduce` on tool functions (sync or async) |
 | MCP server | `python -m leancontext.integrations.mcp_server` — reduce / expand / stats over stdio |
 
+CI exercises OpenAI (chat + Responses), Anthropic, LiteLLM, the standalone proxy, OpenTelemetry,
+and the MCP server against the real packages. Message reduction for all formats (including Gemini)
+is unit-tested directly. The framework adapters (LangChain / LangGraph / Agno) and the SDK-level
+Gemini client wrapper are provided best-effort and are not yet covered in CI against the live SDKs.
+
 ## Reducers
 
 | Kind | What it does |
@@ -139,6 +149,7 @@ r.fidelity                        # 0..1 signal preserved
 | `diff` | Keep all change, hunk, and header lines, collapse unchanged context |
 | `stacktrace` | Keep the exception and boundary frames, collapse the deep middle |
 | `html` | Strip tags, scripts, and styles, keep visible text and links |
+| `table` | Collapse whitespace-aligned command-line tables, keep header and data |
 
 Anything else, or any payload below the size, saving, or fidelity thresholds, passes through unchanged.
 
@@ -170,8 +181,8 @@ leancontext.use_tiktoken("gpt-4o")            # force a specific model's tokeniz
 
 ## Roadmap
 
-Accurate provider tokenizers by default, an MCP server, tested LangChain / LlamaIndex / CrewAI
-adapters, broader Anthropic native interop, and a PyPI release.
+CI-verified LangChain / LlamaIndex / CrewAI / Agno adapters, accurate provider tokenizers by
+default, and broader Anthropic native interop.
 
 ## Contributing
 
