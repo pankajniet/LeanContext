@@ -5,9 +5,24 @@ description = "Deterministic, type-aware reduction of agent tool outputs at the 
 readme = "README.md"
 requires-python = ">=3.14"
 license = { text = "Apache-2.0" }
-authors = [{ name = "Pankaj" }]
+authors = [{ name = "Pankaj Pandey" }]
 keywords = ["llm", "agents", "tokens", "cost", "context", "compression", "rag"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/pankajniet/LeanContext"
+Repository = "https://github.com/pankajniet/LeanContext"
+Issues = "https://github.com/pankajniet/LeanContext/issues"
+Changelog = "https://github.com/pankajniet/LeanContext/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 tiktoken = ["tiktoken>=0.12"]
