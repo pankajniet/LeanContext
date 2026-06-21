@@ -8,6 +8,8 @@ Raises on non-tracebacks → core falls back to passthrough (fail open).
 
 from __future__ import annotations
 
+from .base import Reducer
+
 _KEEP_HEAD = 1
 _KEEP_TAIL = 2
 
@@ -48,3 +50,10 @@ def reduce_stacktrace(text: str) -> tuple[str, list[str]]:
 
     notes = [f"kept {min(len(frames), _KEEP_HEAD + _KEEP_TAIL)} of {len(frames)} frames + exception"]
     return "\n".join(out), notes
+
+
+def _detect(text: str) -> bool:
+    return "Traceback (most recent call last)" in text
+
+
+REDUCER = Reducer("stacktrace", _detect, reduce_stacktrace, priority=20)

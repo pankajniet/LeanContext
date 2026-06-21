@@ -9,13 +9,12 @@ from __future__ import annotations
 
 import json
 import os
-import re
 from collections import OrderedDict
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from .fidelity import fidelity_score
-from .reducers import reduce_diff, reduce_html, reduce_json, reduce_logs, reduce_stacktrace
+from .reducers import REGISTRY
 from .tokens import content_ref, count_tokens
 
 # --- configuration -----------------------------------------------------------
@@ -119,51 +118,14 @@ class Reduction:
 
 # --- detection & dispatch ----------------------------------------------------
 
-REDUCERS: dict[str, Callable[[str], tuple[str, list[str]]]] = {
-    "log": reduce_logs,
-    "json": reduce_json,
-    "diff": reduce_diff,
-    "stacktrace": reduce_stacktrace,
-    "html": reduce_html,
-}
-
-_LOG_HINT = re.compile(
-    r"(?im)^\s*(?:\d{4}-\d{2}-\d{2}[T ]|\[?(?:INFO|DEBUG|WARN|WARNING|ERROR|FATAL|TRACE|CRITICAL)\b)"
-)
-_DIFF_HUNK = re.compile(r"(?m)^@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@")
-
-
-def _looks_like_diff(text: str) -> bool:
-    return text.lstrip().startswith("diff --git") or bool(_DIFF_HUNK.search(text))
-
-
-def _looks_like_html(text: str) -> bool:
-    stripped = text.lstrip()
-    head = stripped[:512].lower()
-    if "<!doctype html" in head or "<html" in head:
-        return True
-    return stripped.startswith("<") and text.lower().count("</") >= 5
+REDUCERS: dict[str, Callable[[str], tuple[str, list[str]]]] = {r.kind: r.reduce for r in REGISTRY}
 
 
 def detect_kind(text: str) -> str:
-    stripped = text.lstrip()
-    if stripped[:1] in "[{":
-        try:
-            json.loads(text)
-            return "json"
-        except Exception:
-            pass
-    if "Traceback (most recent call last)" in text:
-        return "stacktrace"
-    if _looks_like_diff(text):
-        return "diff"
-    if _looks_like_html(text):
-        return "html"
-    lines = text.splitlines()
-    if len(lines) >= 5:
-        hits = sum(1 for ln in lines if _LOG_HINT.match(ln))
-        if hits >= max(3, len(lines) * 0.3):
-            return "log"
+    """Return the kind of ``text`` by asking each reducer's detector, in priority order."""
+    for reducer in REGISTRY:
+        if reducer.detect(text):
+            return reducer.kind
     return "text"
 
 

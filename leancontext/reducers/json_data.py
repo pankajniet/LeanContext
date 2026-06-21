@@ -13,6 +13,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from .base import Reducer
+
 
 def _find_records(data: Any) -> list[dict] | None:
     """Locate a homogeneous-ish list of dicts at the top level or one level down."""
@@ -44,3 +46,16 @@ def reduce_json(text: str) -> tuple[str, list[str]]:
 
     compact = json.dumps(data, separators=(",", ":"), ensure_ascii=False)
     return compact, ["minified json (indentation/whitespace removed, lossless)"]
+
+
+def _detect(text: str) -> bool:
+    if text.lstrip()[:1] not in "[{":
+        return False
+    try:
+        json.loads(text)
+        return True
+    except Exception:
+        return False
+
+
+REDUCER = Reducer("json", _detect, reduce_json, priority=10)

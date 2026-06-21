@@ -7,6 +7,12 @@ and last line plus a count. Deterministic; value-preserving for all changes.
 
 from __future__ import annotations
 
+import re
+
+from .base import Reducer
+
+_DIFF_HUNK = re.compile(r"(?m)^@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@")
+
 _KEEP_PREFIXES = (
     "+", "-", "@@", "diff ", "index ", "new file", "deleted file",
     "rename ", "similarity ", "copy ", "old mode", "new mode",
@@ -39,3 +45,10 @@ def reduce_diff(text: str) -> tuple[str, list[str]]:
 
     notes = [f"kept all change/header lines; collapsed unchanged context ({len(lines)}→{len(out)} lines)"]
     return "\n".join(out), notes
+
+
+def _detect(text: str) -> bool:
+    return text.lstrip().startswith("diff --git") or bool(_DIFF_HUNK.search(text))
+
+
+REDUCER = Reducer("diff", _detect, reduce_diff, priority=30)

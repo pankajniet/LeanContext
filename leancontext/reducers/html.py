@@ -9,6 +9,8 @@ from __future__ import annotations
 import re
 from html.parser import HTMLParser
 
+from .base import Reducer
+
 _SKIP = {"script", "style", "noscript", "svg", "head", "template"}
 
 
@@ -49,3 +51,14 @@ def reduce_html(text: str) -> tuple[str, list[str]]:
         out += "\n\nLinks: " + " ".join(links)
     notes = [f"stripped HTML tags/scripts/styles; kept visible text + {len(links)} links"]
     return out, notes
+
+
+def _detect(text: str) -> bool:
+    stripped = text.lstrip()
+    head = stripped[:512].lower()
+    if "<!doctype html" in head or "<html" in head:
+        return True
+    return stripped.startswith("<") and text.lower().count("</") >= 5
+
+
+REDUCER = Reducer("html", _detect, reduce_html, priority=40)

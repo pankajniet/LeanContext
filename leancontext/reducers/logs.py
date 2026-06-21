@@ -16,6 +16,11 @@ from __future__ import annotations
 
 import re
 
+from .base import Reducer
+
+_LOG_HINT = re.compile(
+    r"(?im)^\s*(?:\d{4}-\d{2}-\d{2}[T ]|\[?(?:INFO|DEBUG|WARN|WARNING|ERROR|FATAL|TRACE|CRITICAL)\b)"
+)
 _SEVERITY = re.compile(r"(?i)\b(ERROR|FATAL|CRITICAL|EXCEPTION|PANIC|TRACEBACK|WARN|WARNING)\b")
 
 # Order matters: more specific patterns first so they win before the generic
@@ -73,3 +78,14 @@ def reduce_logs(text: str) -> tuple[str, list[str]]:
         f"{kept_verbatim} anomaly/unique lines kept verbatim"
     ]
     return "\n".join(out), notes
+
+
+def _detect(text: str) -> bool:
+    lines = text.splitlines()
+    if len(lines) < 5:
+        return False
+    hits = sum(1 for ln in lines if _LOG_HINT.match(ln))
+    return hits >= max(3, len(lines) * 0.3)
+
+
+REDUCER = Reducer("log", _detect, reduce_logs, priority=50)
