@@ -22,6 +22,8 @@ def detect_format(messages: list) -> str:
     for m in messages:
         if not isinstance(m, dict):
             continue
+        if isinstance(m.get("parts"), list):
+            return "gemini"
         if m.get("role") in ("tool", "function"):
             return "openai"
         content = m.get("content")
@@ -107,17 +109,44 @@ def _reduce_anthropic_textblock(x: Any, opts: dict) -> Any:
     return x
 
 
+# --- Gemini format -----------------------------------------------------------
+# Gemini uses `contents` -> `parts`, where a tool result is a `functionResponse`
+# part whose `response` is a dict. We reduce the large string values inside that
+# dict, keeping the dict shape Gemini requires. Typed SDK objects (non-dict)
+# pass through untouched.
+
+def _reduce_gemini_message(content: Any, opts: dict) -> Any:
+    if not isinstance(content, dict) or not isinstance(content.get("parts"), list):
+        return content
+    new_parts, changed = [], False
+    for part in content["parts"]:
+        fr = part.get("functionResponse") if isinstance(part, dict) else None
+        resp = fr.get("response") if isinstance(fr, dict) else None
+        if isinstance(resp, dict):
+            reduced = {k: (_reduce_str(v, opts) if isinstance(v, str) else v) for k, v in resp.items()}
+            new_parts.append({**part, "functionResponse": {**fr, "response": reduced}})
+            changed = True
+        else:
+            new_parts.append(part)
+    if not changed:
+        return content
+    return {**content, "parts": new_parts}
+
+
 # --- public ------------------------------------------------------------------
 
 def reduce_messages(messages: Any, *, fmt: str = "auto", **opts) -> Any:
     """Return a new message list with tool outputs reduced. Input is not mutated.
 
-    Only tool-result content is touched; instructions are never altered. Anything
-    unrecognised passes through unchanged (fail open).
+    Handles OpenAI (`role:"tool"`), Anthropic (`tool_result` blocks), and Gemini
+    (`functionResponse` parts). Only tool-result content is touched; instructions
+    are never altered. Anything unrecognised passes through unchanged (fail open).
     """
     if not isinstance(messages, list):
         return messages
     resolved = detect_format(messages) if fmt == "auto" else fmt
     if resolved == "anthropic":
         return [_reduce_anthropic_message(m, opts) for m in messages]
+    if resolved == "gemini":
+        return [_reduce_gemini_message(m, opts) for m in messages]
     return [_reduce_openai_message(m, opts) for m in messages]

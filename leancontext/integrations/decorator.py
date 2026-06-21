@@ -40,14 +40,19 @@ def wrap(target: Any, **opts) -> Any:
     if callable(target) and not isinstance(target, type):
         return target if is_wrapped(target) else wrap_callable(target, **opts)
 
-    # SDK clients (OpenAI / Anthropic): reduce messages on .create.
+    # SDK clients (OpenAI / Anthropic / Gemini): reduce messages on the call.
     try:
-        from .clients import looks_like_anthropic, looks_like_openai, wrap_anthropic, wrap_openai
+        from .clients import (
+            looks_like_anthropic, looks_like_gemini, looks_like_openai,
+            wrap_anthropic, wrap_gemini, wrap_openai,
+        )
 
         if looks_like_openai(target):
             return wrap_openai(target, **opts)
         if looks_like_anthropic(target):
             return wrap_anthropic(target, **opts)
+        if looks_like_gemini(target):
+            return wrap_gemini(target, **opts)
     except Exception:
         pass  # fail open
 

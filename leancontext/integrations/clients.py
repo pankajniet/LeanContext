@@ -32,6 +32,18 @@ def wrap_anthropic(client: Any, **opts) -> Any:
     return client
 
 
+def wrap_gemini(client: Any, **opts) -> Any:
+    """Reduce functionResponse tool outputs on a google-genai client's generate_content."""
+    try:
+        models = client.models
+        models.generate_content = wrap_messages_create(
+            models.generate_content, fmt="gemini", opts=opts, key="contents"
+        )
+    except Exception:
+        pass  # fail open
+    return client
+
+
 def looks_like_openai(obj: Any) -> bool:
     return hasattr(obj, "chat") and hasattr(getattr(obj, "chat"), "completions")
 
@@ -39,3 +51,7 @@ def looks_like_openai(obj: Any) -> bool:
 def looks_like_anthropic(obj: Any) -> bool:
     return hasattr(obj, "messages") and hasattr(getattr(obj, "messages"), "create") \
         and not looks_like_openai(obj)
+
+
+def looks_like_gemini(obj: Any) -> bool:
+    return hasattr(obj, "models") and hasattr(getattr(obj, "models"), "generate_content")

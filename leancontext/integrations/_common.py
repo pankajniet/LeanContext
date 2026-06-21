@@ -24,19 +24,22 @@ def mark(fn: Callable) -> Callable:
     return fn
 
 
-def reduce_messages_in(mapping: Any, fmt: str, opts: dict) -> None:
-    """Fail-open, in-place reduction of ``mapping['messages']`` (dict-like)."""
-    if isinstance(mapping, dict) and isinstance(mapping.get("messages"), list):
+def reduce_messages_in(mapping: Any, fmt: str, opts: dict, key: str = "messages") -> None:
+    """Fail-open, in-place reduction of ``mapping[key]`` (dict-like).
+
+    ``key`` is ``messages`` for OpenAI/Anthropic, ``contents`` for Gemini.
+    """
+    if isinstance(mapping, dict) and isinstance(mapping.get(key), list):
         try:
-            mapping["messages"] = reduce_messages(mapping["messages"], fmt=fmt, **opts)
+            mapping[key] = reduce_messages(mapping[key], fmt=fmt, **opts)
         except Exception:
             pass  # fail open
 
 
-def wrap_messages_create(create: Callable, *, fmt: str, opts: dict,
+def wrap_messages_create(create: Callable, *, fmt: str, opts: dict, key: str = "messages",
                          reduce: bool = True,
                          before: Optional[Callable[[dict], None]] = None) -> Callable:
-    """Wrap a ``create(**kwargs)`` callable to reduce ``messages`` before calling through.
+    """Wrap a ``create(**kwargs)`` callable to reduce its messages before calling through.
 
     ``before`` runs after reduction (e.g. to inject provider params/headers).
     Idempotent: an already-wrapped callable is returned unchanged.
@@ -47,7 +50,7 @@ def wrap_messages_create(create: Callable, *, fmt: str, opts: dict,
     @functools.wraps(create)
     def wrapper(*args, **kwargs):
         if reduce:
-            reduce_messages_in(kwargs, fmt, opts)
+            reduce_messages_in(kwargs, fmt, opts, key=key)
         if before is not None:
             try:
                 before(kwargs)
