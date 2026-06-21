@@ -8,6 +8,7 @@ LeanContext is present. See AGENTS.md §5B/§5D.
 from __future__ import annotations
 
 import functools
+import inspect
 from collections.abc import Callable
 from typing import Any
 
@@ -15,15 +16,25 @@ from ..core import reduce_text
 from ._common import is_wrapped, mark
 
 
+def _reduced(result: Any, opts: dict) -> Any:
+    return reduce_text(result, **opts).text if isinstance(result, str) else result
+
+
 def wrap_callable(fn: Callable, **opts) -> Callable:
-    """Wrap a tool callable so its string return value is reduced at the source."""
+    """Wrap a tool callable so its string return value is reduced at the source.
+
+    Works for sync and async tools; non-string returns pass through untouched.
+    """
+    if inspect.iscoroutinefunction(fn):
+        @functools.wraps(fn)
+        async def awrapper(*args, **kwargs):
+            return _reduced(await fn(*args, **kwargs), opts)
+
+        return mark(awrapper)
 
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
-        result = fn(*args, **kwargs)
-        if isinstance(result, str):
-            return reduce_text(result, **opts).text
-        return result
+        return _reduced(fn(*args, **kwargs), opts)
 
     return mark(wrapper)
 
@@ -38,8 +49,22 @@ def wrap(target: Any, **opts) -> Any:
     if isinstance(target, (list, tuple)):
         return type(target)(wrap(t, **opts) for t in target)
 
-    if callable(target) and not isinstance(target, type):
-        return target if is_wrapped(target) else wrap_callable(target, **opts)
+    # Framework tool objects first. Several are callable themselves, so they must
+    # be wrapped in place (keeping their schema) before the plain-callable path.
+    try:
+        from .frameworks import (
+            looks_like_agno_tool,
+            looks_like_langchain_tool,
+            wrap_agno,
+            wrap_langchain,
+        )
+
+        if looks_like_langchain_tool(target):
+            return wrap_langchain(target, **opts)
+        if looks_like_agno_tool(target):
+            return wrap_agno(target, **opts)
+    except Exception:
+        pass  # fail open
 
     # SDK clients (OpenAI / Anthropic / Gemini): reduce messages on the call.
     try:
@@ -61,8 +86,14 @@ def wrap(target: Any, **opts) -> Any:
     except Exception:
         pass  # fail open
 
-    # Framework tool objects: wrap the underlying callable in place.
-    for attr in ("func", "coroutine", "_run", "run", "on_invoke", "invoke"):
+    # Plain callable tools.
+    if callable(target) and not isinstance(target, type):
+        return target if is_wrapped(target) else wrap_callable(target, **opts)
+
+    # Fallback for other tool objects: wrap the user callable in place. These are
+    # the attribute names frameworks expose their tool function on (LlamaIndex .fn,
+    # Pydantic AI .function, OpenAI Agents SDK .on_invoke_tool, etc.).
+    for attr in ("func", "coroutine", "entrypoint", "fn", "function", "on_invoke_tool"):
         inner = getattr(target, attr, None)
         if callable(inner) and not is_wrapped(inner):
             try:

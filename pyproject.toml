@@ -13,6 +13,7 @@ dependencies = []
 tiktoken = ["tiktoken>=0.12"]
 otel = ["opentelemetry-api>=1.39"]
 integrations = ["fastapi>=0.125", "httpx>=0.28", "starlette>=0.45", "openai>=2.14", "anthropic>=0.87", "litellm>=1.82"]
+mcp = ["mcp>=1.0"]
 dev = ["pytest>=8.3", "pytest-asyncio>=1.3", "pytest-cov>=7", "ruff>=0.15", "mypy>=1.19", "opentelemetry-sdk>=1.39"]
 
 [project.scripts]

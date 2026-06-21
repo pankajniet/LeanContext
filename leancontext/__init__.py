@@ -37,7 +37,15 @@ from .core import (
     remove_reduction_hook,
 )
 from .cost import CostTracker, estimate_savings, set_price
-from .integrations import wrap, wrap_anthropic, wrap_callable, wrap_gemini, wrap_openai
+from .integrations import (
+    wrap,
+    wrap_agno,
+    wrap_anthropic,
+    wrap_callable,
+    wrap_gemini,
+    wrap_langchain,
+    wrap_openai,
+)
 from .messages import detect_format, reduce_messages
 from .tokens import active_tokenizer, count_tokens, set_token_counter, use_tiktoken
 
@@ -54,6 +62,8 @@ __all__ = [
     "wrap_openai",
     "wrap_anthropic",
     "wrap_gemini",
+    "wrap_agno",
+    "wrap_langchain",
     "detect_kind",
     "disable",
     "enable",

@@ -123,6 +123,8 @@ r.fidelity                        # 0..1 signal preserved
 | Messages | `leancontext.reduce_messages(messages)` (OpenAI, Anthropic, Gemini) |
 | Telemetry | `import leancontext.integrations.otel as o; o.instrument()` |
 | Anthropic native | `wrap_anthropic_native(client, ...)` composes with `clear_tool_uses` context editing |
+| Frameworks | LangChain, LangGraph, Agno via `wrap(tools)`; any framework via `@reduce` on tool functions (sync or async) |
+| MCP server | `python -m leancontext.integrations.mcp_server` — reduce / expand / stats over stdio |
 
 ## Reducers
 
