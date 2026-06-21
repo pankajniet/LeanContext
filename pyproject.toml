@@ -3,17 +3,17 @@ name = "leancontext"
 version = "0.0.1"
 description = "Deterministic, type-aware reduction of agent tool outputs at the source. Cut LLM token cost without making the agent do less."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Pankaj" }]
 keywords = ["llm", "agents", "tokens", "cost", "context", "compression", "rag"]
 dependencies = []
 
 [project.optional-dependencies]
-tiktoken = ["tiktoken>=0.5"]
-otel = ["opentelemetry-api>=1.20"]
-integrations = ["fastapi", "httpx", "starlette", "openai", "anthropic", "litellm"]
-dev = ["pytest>=7", "pytest-asyncio>=0.23", "pytest-cov", "ruff>=0.5", "mypy>=1.8", "opentelemetry-sdk>=1.20"]
+tiktoken = ["tiktoken>=0.12"]
+otel = ["opentelemetry-api>=1.39"]
+integrations = ["fastapi>=0.125", "httpx>=0.28", "starlette>=0.45", "openai>=2.14", "anthropic>=0.87", "litellm>=1.82"]
+dev = ["pytest>=8.3", "pytest-asyncio>=1.3", "pytest-cov>=7", "ruff>=0.15", "mypy>=1.19", "opentelemetry-sdk>=1.39"]
 
 [project.scripts]
 leancontext = "leancontext.cli:main"
@@ -33,7 +33,7 @@ filterwarnings = ["ignore::UserWarning:requests"]
 
 [tool.ruff]
 line-length = 110
-target-version = "py310"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
@@ -43,5 +43,5 @@ select = ["E", "F", "I", "UP", "B"]
 extend-immutable-calls = ["fastapi.Body", "fastapi.Depends", "fastapi.Query"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.14"
 ignore_missing_imports = true

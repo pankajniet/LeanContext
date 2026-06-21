@@ -16,7 +16,7 @@ mypy leancontext                           # types
 pytest -q                                  # tests
 ```
 
-CI runs all three on Python 3.10, 3.11, and 3.12.
+CI runs all three on Python 3.14.
 
 ## Writing a reducer
 

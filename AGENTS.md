@@ -134,7 +134,7 @@ def search_logs(query: str) -> str:
 
 ## 8. Conventions
 
-- Python 3.10+. Standard library only in the core path; optional extras (tiktoken) behind a flag.
+- Python 3.14+. Standard library only in the core path; optional extras (tiktoken) behind a flag.
 - Type hints everywhere. Dataclasses for results.
 - Pure functions for reducers: `reduce(text, **opts) -> Reduction`. No global state, no I/O.
 - Determinism is a test requirement: same input must yield byte-identical output.
