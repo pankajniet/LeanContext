@@ -15,7 +15,8 @@ without the ``proxy`` extra.
 from __future__ import annotations
 
 import os
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from ._common import reduce_messages_in
 
@@ -36,8 +37,8 @@ def _httpx_forwarder(upstream: str) -> Callable[[dict], Any]:
     return forward
 
 
-def create_app(forwarder: Optional[Callable[[dict], Any]] = None,
-               upstream: Optional[str] = None):
+def create_app(forwarder: Callable[[dict], Any] | None = None,
+               upstream: str | None = None):
     """Build the FastAPI app. Pass a custom ``forwarder(payload)->dict`` for tests."""
     from fastapi import Body, FastAPI
     from fastapi.responses import JSONResponse

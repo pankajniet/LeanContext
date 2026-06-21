@@ -8,7 +8,8 @@ LeanContext is present. See AGENTS.md §5B/§5D.
 from __future__ import annotations
 
 import functools
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from ..core import reduce_text
 from ._common import is_wrapped, mark
@@ -43,8 +44,12 @@ def wrap(target: Any, **opts) -> Any:
     # SDK clients (OpenAI / Anthropic / Gemini): reduce messages on the call.
     try:
         from .clients import (
-            looks_like_anthropic, looks_like_gemini, looks_like_openai,
-            wrap_anthropic, wrap_gemini, wrap_openai,
+            looks_like_anthropic,
+            looks_like_gemini,
+            looks_like_openai,
+            wrap_anthropic,
+            wrap_gemini,
+            wrap_openai,
         )
 
         if looks_like_openai(target):

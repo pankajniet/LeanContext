@@ -43,7 +43,9 @@ def _diff(n=60):
 
 
 def _trace(n=40):
-    frames = "\n".join(f'  File "module_{i}.py", line {i*7}, in handler_{i}\n    step_{i}()' for i in range(n))
+    frames = "\n".join(
+        f'  File "module_{i}.py", line {i*7}, in handler_{i}\n    step_{i}()' for i in range(n)
+    )
     return "Traceback (most recent call last):\n" + frames + "\nRuntimeError: pipeline stalled — root cause"
 
 

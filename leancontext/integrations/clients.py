@@ -46,13 +46,13 @@ def wrap_gemini(client: Any, **opts) -> Any:
 
 
 def looks_like_openai(obj: Any) -> bool:
-    return hasattr(obj, "chat") and hasattr(getattr(obj, "chat"), "completions")
+    return hasattr(obj, "chat") and hasattr(obj.chat, "completions")
 
 
 def looks_like_anthropic(obj: Any) -> bool:
-    return hasattr(obj, "messages") and hasattr(getattr(obj, "messages"), "create") \
+    return hasattr(obj, "messages") and hasattr(obj.messages, "create") \
         and not looks_like_openai(obj)
 
 
 def looks_like_gemini(obj: Any) -> bool:
-    return hasattr(obj, "models") and hasattr(getattr(obj, "models"), "generate_content")
+    return hasattr(obj, "models") and hasattr(obj.models, "generate_content")

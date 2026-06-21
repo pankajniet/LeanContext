@@ -8,7 +8,8 @@ Anthropic client wrappers, the Anthropic-native wrapper, and LiteLLM.
 from __future__ import annotations
 
 import functools
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from ..messages import reduce_messages
 
@@ -38,7 +39,7 @@ def reduce_messages_in(mapping: Any, fmt: str, opts: dict, key: str = "messages"
 
 def wrap_messages_create(create: Callable, *, fmt: str, opts: dict, key: str = "messages",
                          reduce: bool = True,
-                         before: Optional[Callable[[dict], None]] = None) -> Callable:
+                         before: Callable[[dict], None] | None = None) -> Callable:
     """Wrap a ``create(**kwargs)`` callable to reduce its messages before calling through.
 
     ``before`` runs after reduction (e.g. to inject provider params/headers).

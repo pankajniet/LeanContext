@@ -16,7 +16,8 @@ Schema verified against platform.claude.com/docs (context-editing), 2026-06.
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Optional
+from collections.abc import Iterable
+from typing import Any
 
 from ._common import wrap_messages_create
 
@@ -29,11 +30,11 @@ CLEAR_TOOL_USES = "clear_tool_uses_20250919"
 
 def context_management(
     *,
-    trigger_input_tokens: Optional[int] = None,
-    keep_tool_uses: Optional[int] = None,
-    clear_at_least_input_tokens: Optional[int] = None,
-    exclude_tools: Optional[Iterable[str]] = None,
-    clear_tool_inputs: Optional[bool] = None,
+    trigger_input_tokens: int | None = None,
+    keep_tool_uses: int | None = None,
+    clear_at_least_input_tokens: int | None = None,
+    exclude_tools: Iterable[str] | None = None,
+    clear_tool_inputs: bool | None = None,
 ) -> dict:
     """Build the ``context_management`` request param for tool-result clearing.
 
@@ -54,7 +55,7 @@ def context_management(
     return {"edits": [edit]}
 
 
-def beta_headers(extra: Optional[dict] = None) -> dict:
+def beta_headers(extra: dict | None = None) -> dict:
     """Return headers enabling context management, merged with ``extra``."""
     headers = dict(extra or {})
     headers.setdefault("anthropic-beta", BETA_HEADER)

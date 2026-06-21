@@ -13,19 +13,19 @@ no known price, token savings are still reported and ``usd_saved`` is ``None``.
 
 from __future__ import annotations
 
-from typing import Optional
+from collections.abc import Callable
 
 #: USD per 1M tokens (input, output). Indicative — override via set_price().
-PRICING: dict[str, tuple[float, Optional[float]]] = {
+PRICING: dict[str, tuple[float, float | None]] = {
     "claude-sonnet-4-6": (3.0, 15.0),  # verified 2026-06; others: register your own
 }
 
 
-def set_price(model: str, input_per_mtok: float, output_per_mtok: Optional[float] = None) -> None:
+def set_price(model: str, input_per_mtok: float, output_per_mtok: float | None = None) -> None:
     PRICING[model] = (input_per_mtok, output_per_mtok)
 
 
-def _input_price(model: Optional[str], override: Optional[float]) -> Optional[float]:
+def _input_price(model: str | None, override: float | None) -> float | None:
     if override is not None:
         return override
     if model:
@@ -37,8 +37,8 @@ def _input_price(model: Optional[str], override: Optional[float]) -> Optional[fl
     return None
 
 
-def estimate_savings(reduction, model: Optional[str] = None,
-                     input_price_per_mtok: Optional[float] = None) -> dict:
+def estimate_savings(reduction, model: str | None = None,
+                     input_price_per_mtok: float | None = None) -> dict:
     """Estimate token + USD savings for a single reduction."""
     saved = reduction.tokens_saved
     price = _input_price(model, input_price_per_mtok)
@@ -61,7 +61,7 @@ class CostTracker:
         print(tracker.report())
     """
 
-    def __init__(self, model: Optional[str] = None, input_price_per_mtok: Optional[float] = None):
+    def __init__(self, model: str | None = None, input_price_per_mtok: float | None = None):
         self.model = model
         self.price = input_price_per_mtok
         self.reductions = 0
@@ -70,7 +70,7 @@ class CostTracker:
         self.tokens_saved = 0
         self.usd_saved = 0.0
         self.has_price = _input_price(model, input_price_per_mtok) is not None
-        self._hook = None
+        self._hook: Callable | None = None
 
     def _on(self, r) -> None:
         self.reductions += 1
@@ -80,7 +80,7 @@ class CostTracker:
         if self.has_price:
             self.usd_saved += estimate_savings(r, self.model, self.price)["usd_saved"]
 
-    def install(self) -> "CostTracker":
+    def install(self) -> CostTracker:
         from .core import on_reduction
         self._hook = on_reduction(self._on)
         return self

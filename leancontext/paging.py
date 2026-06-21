@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import os
 import re
-from typing import Optional
 
 from .tokens import content_ref, count_tokens
 
@@ -24,7 +23,7 @@ _REF_RE = re.compile(r"lc://([0-9a-f]{6,40})")
 class ContentStore:
     """Maps a content hash → original content. In-memory, or disk-backed if ``root`` set."""
 
-    def __init__(self, root: Optional[str] = None):
+    def __init__(self, root: str | None = None):
         self.root = root
         self._mem: dict[str, str] = {}
         if self.root:
@@ -42,7 +41,7 @@ class ContentStore:
             self._mem[ref] = content
         return ref
 
-    def get(self, ref: str) -> Optional[str]:
+    def get(self, ref: str) -> str | None:
         if self.root:
             try:
                 with open(self._path(ref), encoding="utf-8") as fh:
@@ -60,18 +59,18 @@ def _normalize(ref: str) -> str:
     return m.group(1) if m else ref.strip()
 
 
-def store(content: str, using: Optional[ContentStore] = None) -> str:
+def store(content: str, using: ContentStore | None = None) -> str:
     """Stash content and return its ref id."""
     return (using or _DEFAULT_STORE).put(content)
 
 
-def expand(ref: str, using: Optional[ContentStore] = None) -> Optional[str]:
+def expand(ref: str, using: ContentStore | None = None) -> str | None:
     """Return the original content for a ref (accepts 'lc://<id>' or a bare id)."""
     return (using or _DEFAULT_STORE).get(_normalize(ref))
 
 
-def reference_line(content: str, summary: Optional[str] = None,
-                   using: Optional[ContentStore] = None) -> str:
+def reference_line(content: str, summary: str | None = None,
+                   using: ContentStore | None = None) -> str:
     """Stash content and return a compact, expandable reference line."""
     ref = store(content, using=using)
     tokens = count_tokens(content)
@@ -79,8 +78,8 @@ def reference_line(content: str, summary: Optional[str] = None,
     return f"[{REF_SCHEME}://{ref} · {tokens} tokens · call leancontext_expand to view{tail}]"
 
 
-def page(content: str, *, summary: Optional[str] = None,
-         using: Optional[ContentStore] = None) -> str:
+def page(content: str, *, summary: str | None = None,
+         using: ContentStore | None = None) -> str:
     """Collapse aged content to an expandable reference (O(1) on the wire)."""
     return reference_line(content, summary=summary, using=using)
 
@@ -95,7 +94,10 @@ EXPAND_TOOL_SPEC = {
     "input_schema": {
         "type": "object",
         "properties": {
-            "ref": {"type": "string", "description": "The reference id, e.g. 'lc://a1b2c3d4' or the bare id."},
+            "ref": {
+                "type": "string",
+                "description": "The reference id, e.g. 'lc://a1b2c3d4' or the bare id.",
+            },
         },
         "required": ["ref"],
     },

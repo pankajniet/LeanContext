@@ -46,7 +46,7 @@ def fidelity_score(original: str, reduced: str) -> float:
     items = salient_items(original)
     if not items:
         return 1.0
-    reduced_lines = {_norm(l) for l in reduced.splitlines()}
+    reduced_lines = {_norm(line) for line in reduced.splitlines()}
     kept = 0
     for item in items:
         if item in reduced_lines or item in reduced:

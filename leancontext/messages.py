@@ -122,7 +122,7 @@ def _reduce_gemini_message(content: Any, opts: dict) -> Any:
     for part in content["parts"]:
         fr = part.get("functionResponse") if isinstance(part, dict) else None
         resp = fr.get("response") if isinstance(fr, dict) else None
-        if isinstance(resp, dict):
+        if isinstance(fr, dict) and isinstance(resp, dict):
             reduced = {k: (_reduce_str(v, opts) if isinstance(v, str) else v) for k, v in resp.items()}
             new_parts.append({**part, "functionResponse": {**fr, "response": reduced}})
             changed = True

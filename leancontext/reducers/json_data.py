@@ -11,10 +11,10 @@ list — still a real saving on pretty-printed output, with zero information los
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any
 
 
-def _find_records(data: Any) -> Optional[list[dict]]:
+def _find_records(data: Any) -> list[dict] | None:
     """Locate a homogeneous-ish list of dicts at the top level or one level down."""
     if isinstance(data, list) and data and all(isinstance(x, dict) for x in data):
         return data

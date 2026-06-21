@@ -11,8 +11,8 @@ import json
 import os
 import re
 from collections import OrderedDict
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Optional
 
 from .fidelity import fidelity_score
 from .reducers import reduce_diff, reduce_html, reduce_json, reduce_logs, reduce_stacktrace
@@ -26,6 +26,7 @@ class _Config:
     min_saving: float = 0.10      # require at least this fractional saving to apply
     min_fidelity: float = 0.85    # require at least this signal preservation to apply
     min_tokens: int = 50          # below this, not worth touching
+    max_input_chars: int = 0      # if >0, payloads larger than this pass through untouched
     disabled: bool = False
     cache_size: int = 2048        # max cached reductions; 0 disables the cache
     hooks: list = field(default_factory=list)
@@ -35,7 +36,7 @@ CONFIG = _Config()
 
 # A tool output is re-sent on every turn, so we reduce each unique payload once and
 # reuse the result. Keyed by content hash + options; deterministic, so this is safe.
-_CACHE: "OrderedDict[tuple, Reduction]" = OrderedDict()
+_CACHE: OrderedDict[tuple, Reduction] = OrderedDict()
 
 
 def clear_cache() -> None:
@@ -55,7 +56,7 @@ def is_disabled() -> bool:
     return CONFIG.disabled or os.environ.get("LEANCONTEXT_DISABLED", "") == "1"
 
 
-def on_reduction(callback: Callable[["Reduction"], None]) -> Callable[["Reduction"], None]:
+def on_reduction(callback: Callable[[Reduction], None]) -> Callable[[Reduction], None]:
     """Register a telemetry hook called after each *applied* reduction.
 
     Composable: multiple hooks may be registered. Returns the callback so it can
@@ -65,7 +66,7 @@ def on_reduction(callback: Callable[["Reduction"], None]) -> Callable[["Reductio
     return callback
 
 
-def remove_reduction_hook(callback: Callable[["Reduction"], None]) -> None:
+def remove_reduction_hook(callback: Callable[[Reduction], None]) -> None:
     try:
         CONFIG.hooks.remove(callback)
     except ValueError:
@@ -76,7 +77,7 @@ def clear_reduction_hooks() -> None:
     CONFIG.hooks.clear()
 
 
-def _emit(reduction: "Reduction") -> None:
+def _emit(reduction: Reduction) -> None:
     for callback in list(CONFIG.hooks):
         try:
             callback(reduction)
@@ -182,8 +183,8 @@ def reduce_text(
     content: object,
     *,
     kind: str = "auto",
-    min_saving: Optional[float] = None,
-    min_fidelity: Optional[float] = None,
+    min_saving: float | None = None,
+    min_fidelity: float | None = None,
 ) -> Reduction:
     """Reduce a single piece of content. Always safe: worst case is a no-op.
 
@@ -201,7 +202,7 @@ def reduce_text(
     if is_disabled():  # global toggle; never cached so re-enabling takes effect at once
         return _passthrough(original, before, ref, ["disabled"])
 
-    key = (ref, kind, min_saving, min_fidelity, CONFIG.min_tokens)
+    key = (ref, kind, min_saving, min_fidelity, CONFIG.min_tokens, CONFIG.max_input_chars)
     use_cache = CONFIG.cache_size > 0
 
     if use_cache and key in _CACHE:
@@ -225,6 +226,8 @@ def _compute(original: str, before: int, ref: str, kind: str,
     def passthrough(notes: list[str]) -> Reduction:
         return _passthrough(original, before, ref, notes)
 
+    if CONFIG.max_input_chars and len(original) > CONFIG.max_input_chars:
+        return passthrough(["above max_input_chars"])
     if before < CONFIG.min_tokens:
         return passthrough(["below min_tokens"])
 

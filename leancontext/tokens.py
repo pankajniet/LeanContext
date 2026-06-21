@@ -9,9 +9,9 @@ present — accounting precision is orthogonal to safety.
 from __future__ import annotations
 
 import hashlib
-from typing import Callable, Optional
+from collections.abc import Callable
 
-_counter: Optional[Callable[[str], int]] = None
+_counter: Callable[[str], int] | None = None
 
 
 def content_ref(text: str) -> str:
