@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Optional
 
 from .fidelity import fidelity_score
-from .reducers import reduce_json, reduce_logs
+from .reducers import reduce_diff, reduce_html, reduce_json, reduce_logs, reduce_stacktrace
 from .tokens import count_tokens
 
 # --- configuration -----------------------------------------------------------
@@ -107,11 +107,27 @@ class Reduction:
 REDUCERS: dict[str, Callable[[str], tuple[str, list[str]]]] = {
     "log": reduce_logs,
     "json": reduce_json,
+    "diff": reduce_diff,
+    "stacktrace": reduce_stacktrace,
+    "html": reduce_html,
 }
 
 _LOG_HINT = re.compile(
     r"(?im)^\s*(?:\d{4}-\d{2}-\d{2}[T ]|\[?(?:INFO|DEBUG|WARN|WARNING|ERROR|FATAL|TRACE|CRITICAL)\b)"
 )
+_DIFF_HUNK = re.compile(r"(?m)^@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@")
+
+
+def _looks_like_diff(text: str) -> bool:
+    return text.lstrip().startswith("diff --git") or bool(_DIFF_HUNK.search(text))
+
+
+def _looks_like_html(text: str) -> bool:
+    stripped = text.lstrip()
+    head = stripped[:512].lower()
+    if "<!doctype html" in head or "<html" in head:
+        return True
+    return stripped.startswith("<") and text.lower().count("</") >= 5
 
 
 def detect_kind(text: str) -> str:
@@ -123,7 +139,11 @@ def detect_kind(text: str) -> str:
         except Exception:
             pass
     if "Traceback (most recent call last)" in text:
-        return "stacktrace"  # no reducer yet -> will pass through (fail open)
+        return "stacktrace"
+    if _looks_like_diff(text):
+        return "diff"
+    if _looks_like_html(text):
+        return "html"
     lines = text.splitlines()
     if len(lines) >= 5:
         hits = sum(1 for ln in lines if _LOG_HINT.match(ln))
