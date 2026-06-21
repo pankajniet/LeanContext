@@ -34,3 +34,11 @@ def test_stacktrace_fidelity_requires_exception():
 def test_unknown_kind_uses_signal_score():
     # no severity lines -> nothing critical -> 1.0
     assert fidelity_score("just some plain text", "plain text", "text") == 1.0
+
+
+def test_html_fidelity_drops_when_visible_text_lost():
+    # neutral prose (no severity keyword): a content-aware check must still see the loss
+    html = "<html><body><h1>Welcome to the dashboard</h1><p>ordinary body paragraph</p></body></html>"
+    assert fidelity_score(html, "Welcome to the dashboard\n\nordinary body paragraph", "html") == 1.0
+    assert fidelity_score(html, "Welcome to the dashboard", "html") < 1.0   # body dropped
+    assert fidelity_score(html, "", "html") < 1.0

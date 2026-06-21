@@ -5,6 +5,15 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [2.0.7] - 2026-06-21
+
+### Fixed
+- HTML fidelity is now content-aware: it measures the fraction of the original's
+  visible-text words kept in the output (reusing the HTML reducer's own extractor),
+  so dropped body text lowers the score and trips the fidelity gate. The previous
+  salience-based check returned 1.0 for lost prose that contained no error keyword.
+  Correct strips still score ~1.0 and reduce as before.
+
 ## [2.0.6] - 2026-06-21
 
 ### Fixed
@@ -78,7 +87,8 @@ superseded by 2.0.2. Version 2.0.3 was never published.
 - Targets Python 3.14; ruff, mypy, and coverage run in CI; examples, contributor, and
   security docs included.
 
-[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.6...HEAD
+[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.7...HEAD
+[2.0.7]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.7
 [2.0.6]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.6
 [2.0.5]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.5
 [2.0.4]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.4

@@ -103,10 +103,33 @@ def _stacktrace_fidelity(original: str, reduced: str) -> float:
     return 1.0 if lines[-1] in reduced else 0.0
 
 
+def _html_fidelity(original: str, reduced: str) -> float:
+    """Fraction of the original's visible-text words preserved in the output.
+
+    Reuses the HTML reducer's own extractor, so the check measures exactly what the
+    reduction is supposed to keep (visible text, not tags/scripts). A correct strip
+    keeps every word and scores ~1.0; dropping body text drops the score — unlike a
+    generic salience check, which is blind to lost prose with no error keywords.
+    """
+    from .reducers.html import _Extract  # local import avoids an import cycle
+
+    parser = _Extract()
+    try:
+        parser.feed(original)
+    except Exception:
+        return 1.0
+    words = [w for part in parser.parts for w in part.split() if w]
+    if not words:
+        return 1.0
+    kept = sum(1 for w in words if w in reduced)
+    return kept / len(words)
+
+
 _TYPED = {
     "json": _json_fidelity,
     "diff": _diff_fidelity,
     "stacktrace": _stacktrace_fidelity,
+    "html": _html_fidelity,
 }
 
 
