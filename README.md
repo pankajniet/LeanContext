@@ -33,13 +33,13 @@ def search_logs(query: str) -> str:
 $ python bench.py
 sample              kind          before   after  saved  fidelity
 -----------------------------------------------------------------
-log (incident)      log            26766      55   100%      100%
-json (RAG chunks)   json            1706    1247    27%      100%
-html (web fetch)    html            1528    1156    24%      100%
-diff (patch)        diff             592      58    90%      100%
-stacktrace          stacktrace       618      72    88%      100%
+log (incident)      log            52642     100   100%      100%
+json (RAG chunks)   json            1862    1390    25%      100%
+html (web fetch)    html            1672    1093    35%      100%
+diff (patch)        diff             639      81    87%      100%
+stacktrace          stacktrace       896      94    90%      100%
 -----------------------------------------------------------------
-TOTAL                              31210    2588    92%
+TOTAL                              57711    2758    95%
 ```
 
 A real incident log, before and after:
@@ -81,6 +81,7 @@ errors, anomalies, and identifiers, and collapses the rest.
 pip install -e .                  # core, standard library only
 pip install -e ".[integrations]"  # openai, anthropic, litellm, fastapi adapters
 pip install -e ".[otel]"          # OpenTelemetry metrics
+pip install -e ".[tiktoken]"      # exact token counts (used automatically when present)
 ```
 
 ## Use it
@@ -158,7 +159,7 @@ tracker.report()    # {tokens_saved, usd_saved, ratio, cache_safe: True}
 leancontext.disable()                         # global kill switch (or env LEANCONTEXT_DISABLED=1)
 leancontext.reduce(x, min_saving=0.1, min_fidelity=0.85)
 leancontext.on_reduction(callback)            # telemetry hook (composable)
-leancontext.use_tiktoken("gpt-4o")            # exact token counts
+leancontext.use_tiktoken("gpt-4o")            # force a specific model's tokenizer
 ```
 
 ## Roadmap

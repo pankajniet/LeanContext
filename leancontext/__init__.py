@@ -39,7 +39,7 @@ from .core import (
 from .cost import CostTracker, estimate_savings, set_price
 from .integrations import wrap, wrap_anthropic, wrap_callable, wrap_gemini, wrap_openai
 from .messages import detect_format, reduce_messages
-from .tokens import count_tokens, set_token_counter, use_tiktoken
+from .tokens import active_tokenizer, count_tokens, set_token_counter, use_tiktoken
 
 __version__ = "0.0.1"
 
@@ -65,6 +65,7 @@ __all__ = [
     "count_tokens",
     "set_token_counter",
     "use_tiktoken",
+    "active_tokenizer",
     "estimate_savings",
     "CostTracker",
     "set_price",
