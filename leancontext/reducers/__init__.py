@@ -16,10 +16,12 @@ from .logs import REDUCER as _logs
 from .logs import reduce_logs
 from .stacktrace import REDUCER as _stacktrace
 from .stacktrace import reduce_stacktrace
+from .table import REDUCER as _table
+from .table import reduce_table
 
 # Detection runs in priority order (lowest first): json, stacktrace, diff, html, log.
 REGISTRY: list[Reducer] = sorted(
-    [_json, _stacktrace, _diff, _html, _logs], key=lambda r: r.priority
+    [_json, _stacktrace, _diff, _html, _logs, _table], key=lambda r: r.priority
 )
 
 __all__ = [
@@ -30,4 +32,5 @@ __all__ = [
     "reduce_diff",
     "reduce_stacktrace",
     "reduce_html",
+    "reduce_table",
 ]
