@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
@@ -26,10 +27,20 @@ class _Config:
     min_fidelity: float = 0.85    # require at least this signal preservation to apply
     min_tokens: int = 50          # below this, not worth touching
     disabled: bool = False
+    cache_size: int = 2048        # max cached reductions; 0 disables the cache
     hooks: list = field(default_factory=list)
 
 
 CONFIG = _Config()
+
+# A tool output is re-sent on every turn, so we reduce each unique payload once and
+# reuse the result. Keyed by content hash + options; deterministic, so this is safe.
+_CACHE: "OrderedDict[tuple, Reduction]" = OrderedDict()
+
+
+def clear_cache() -> None:
+    """Drop all cached reductions."""
+    _CACHE.clear()
 
 
 def disable() -> None:
@@ -174,7 +185,12 @@ def reduce_text(
     min_saving: Optional[float] = None,
     min_fidelity: Optional[float] = None,
 ) -> Reduction:
-    """Reduce a single piece of content. Always safe: worst case is a no-op."""
+    """Reduce a single piece of content. Always safe: worst case is a no-op.
+
+    Deterministic results are cached by content hash, so a tool output that is
+    re-sent across turns is computed only once. Telemetry still fires on every
+    call (cache hit or miss), so per-turn savings are recorded as before.
+    """
     min_saving = CONFIG.min_saving if min_saving is None else min_saving
     min_fidelity = CONFIG.min_fidelity if min_fidelity is None else min_fidelity
 
@@ -182,11 +198,33 @@ def reduce_text(
     before = count_tokens(original)
     ref = content_ref(original)
 
+    if is_disabled():  # global toggle; never cached so re-enabling takes effect at once
+        return _passthrough(original, before, ref, ["disabled"])
+
+    key = (ref, kind, min_saving, min_fidelity, CONFIG.min_tokens)
+    use_cache = CONFIG.cache_size > 0
+
+    if use_cache and key in _CACHE:
+        result = _CACHE[key]
+        _CACHE.move_to_end(key)
+    else:
+        result = _compute(original, before, ref, kind, min_saving, min_fidelity)
+        if use_cache:
+            _CACHE[key] = result
+            if len(_CACHE) > CONFIG.cache_size:
+                _CACHE.popitem(last=False)  # evict least-recently-used
+
+    if result.applied:
+        _emit(result)
+    return result
+
+
+def _compute(original: str, before: int, ref: str, kind: str,
+             min_saving: float, min_fidelity: float) -> Reduction:
+    """Run detection + the typed reducer. Fail-open: any problem returns the original."""
     def passthrough(notes: list[str]) -> Reduction:
         return _passthrough(original, before, ref, notes)
 
-    if is_disabled():
-        return passthrough(["disabled"])
     if before < CONFIG.min_tokens:
         return passthrough(["below min_tokens"])
 
@@ -208,6 +246,4 @@ def reduce_text(
         notes.append(f"reverted: saving={saving:.0%}, fidelity={fid:.0%} (below threshold)")
         return passthrough(notes)
 
-    result = Reduction(text, detected, before, after, fid, ref, original, notes)
-    _emit(result)
-    return result
+    return Reduction(text, detected, before, after, fid, ref, original, notes)

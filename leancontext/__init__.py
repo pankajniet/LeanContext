@@ -26,6 +26,7 @@ from typing import Any
 from .core import (
     CONFIG,
     Reduction,
+    clear_cache,
     clear_reduction_hooks,
     detect_kind,
     disable,
@@ -60,6 +61,7 @@ __all__ = [
     "on_reduction",
     "remove_reduction_hook",
     "clear_reduction_hooks",
+    "clear_cache",
     "count_tokens",
     "set_token_counter",
     "use_tiktoken",
