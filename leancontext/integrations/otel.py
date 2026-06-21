@@ -47,7 +47,7 @@ def instrument(meter_provider: Any = None) -> Any:
 
     def _hook(r) -> None:
         attrs = {"leancontext.kind": r.kind}
-        saved = max(0, r.tokens_before - r.tokens_after)
+        saved = r.tokens_saved
         m_before.add(r.tokens_before, attrs)
         m_after.add(r.tokens_after, attrs)
         m_saved.add(saved, attrs)

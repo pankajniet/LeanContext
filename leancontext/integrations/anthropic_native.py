@@ -16,10 +16,9 @@ Schema verified against platform.claude.com/docs (context-editing), 2026-06.
 
 from __future__ import annotations
 
-import functools
 from typing import Any, Iterable, Optional
 
-from ..messages import reduce_messages
+from ._common import wrap_messages_create
 
 #: Beta header required to enable context management on the Messages API.
 BETA_HEADER = "context-management-2025-06-27"
@@ -65,31 +64,19 @@ def beta_headers(extra: Optional[dict] = None) -> dict:
 def wrap_anthropic_native(client: Any, *, reduce: bool = True, send_beta: bool = True, **cm) -> Any:
     """Wrap an Anthropic client so messages.create composes reduction + native clearing.
 
-    ``cm`` kwargs are forwarded to :func:`context_management`. Fail-open: any error
-    leaves the original call untouched.
+    ``cm`` kwargs are forwarded to :func:`context_management`. Fail-open.
     """
     cm_config = context_management(**cm)
 
+    def inject(kwargs: dict) -> None:
+        kwargs.setdefault("context_management", cm_config)
+        if send_beta:
+            kwargs["extra_headers"] = beta_headers(kwargs.get("extra_headers"))
+
     try:
-        orig = client.messages.create
+        client.messages.create = wrap_messages_create(
+            client.messages.create, fmt="anthropic", opts={}, reduce=reduce, before=inject
+        )
     except Exception:
-        return client
-
-    if getattr(orig, "__leancontext_wrapped__", False):
-        return client
-
-    @functools.wraps(orig)
-    def create(*args, **kwargs):
-        try:
-            if reduce and "messages" in kwargs:
-                kwargs["messages"] = reduce_messages(kwargs["messages"], fmt="anthropic")
-            kwargs.setdefault("context_management", cm_config)
-            if send_beta:
-                kwargs["extra_headers"] = beta_headers(kwargs.get("extra_headers"))
-        except Exception:
-            pass  # fail open
-        return orig(*args, **kwargs)
-
-    create.__leancontext_wrapped__ = True  # type: ignore[attr-defined]
-    client.messages.create = create
+        pass  # fail open
     return client

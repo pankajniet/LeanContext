@@ -15,15 +15,15 @@ Proxy usage (config.yaml)::
 
 SDK usage::
 
-    import leancontext.integrations.litellm as wl
-    wl.patch()                      # reduce messages on every litellm.completion call
+    import leancontext.integrations.litellm as ll
+    ll.patch()                      # reduce messages on every litellm.completion call
 """
 
 from __future__ import annotations
 
 import functools
 
-from ..messages import reduce_messages
+from ._common import mark, reduce_messages_in, wrap_messages_create
 
 _REDUCIBLE_CALLS = ("completion", "text_completion")
 
@@ -34,11 +34,8 @@ def make_handler(**opts):
 
     class LeanContextHandler(CustomLogger):
         async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
-            if call_type in _REDUCIBLE_CALLS and isinstance(data, dict) and "messages" in data:
-                try:
-                    data["messages"] = reduce_messages(data["messages"], **opts)
-                except Exception:
-                    pass  # fail open — never break the proxy
+            if call_type in _REDUCIBLE_CALLS:
+                reduce_messages_in(data, "auto", opts)  # fail-open in-place
             return data
 
     return LeanContextHandler()
@@ -51,32 +48,17 @@ def patch(**opts) -> None:
     if getattr(litellm, "_leancontext_patched", False):
         return
 
-    _orig_completion = litellm.completion
-
-    @functools.wraps(_orig_completion)
-    def completion(*args, **kwargs):
-        if "messages" in kwargs:
-            try:
-                kwargs["messages"] = reduce_messages(kwargs["messages"], **opts)
-            except Exception:
-                pass
-        return _orig_completion(*args, **kwargs)
-
-    litellm.completion = completion
+    litellm.completion = wrap_messages_create(litellm.completion, fmt="auto", opts=opts)
 
     if hasattr(litellm, "acompletion"):
         _orig_acompletion = litellm.acompletion
 
         @functools.wraps(_orig_acompletion)
         async def acompletion(*args, **kwargs):
-            if "messages" in kwargs:
-                try:
-                    kwargs["messages"] = reduce_messages(kwargs["messages"], **opts)
-                except Exception:
-                    pass
+            reduce_messages_in(kwargs, "auto", opts)
             return await _orig_acompletion(*args, **kwargs)
 
-        litellm.acompletion = acompletion
+        litellm.acompletion = mark(acompletion)
 
     litellm._leancontext_patched = True
 

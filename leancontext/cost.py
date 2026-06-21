@@ -40,7 +40,7 @@ def _input_price(model: Optional[str], override: Optional[float]) -> Optional[fl
 def estimate_savings(reduction, model: Optional[str] = None,
                      input_price_per_mtok: Optional[float] = None) -> dict:
     """Estimate token + USD savings for a single reduction."""
-    saved = max(0, reduction.tokens_before - reduction.tokens_after)
+    saved = reduction.tokens_saved
     price = _input_price(model, input_price_per_mtok)
     usd = None if price is None else round(saved / 1_000_000 * price, 6)
     return {
@@ -69,18 +69,16 @@ class CostTracker:
         self.tokens_after = 0
         self.tokens_saved = 0
         self.usd_saved = 0.0
-        self._has_price = False
+        self.has_price = _input_price(model, input_price_per_mtok) is not None
         self._hook = None
 
     def _on(self, r) -> None:
-        s = estimate_savings(r, self.model, self.price)
         self.reductions += 1
-        self.tokens_before += s["tokens_before"]
-        self.tokens_after += s["tokens_after"]
-        self.tokens_saved += s["tokens_saved"]
-        if s["usd_saved"] is not None:
-            self.usd_saved += s["usd_saved"]
-            self._has_price = True
+        self.tokens_before += r.tokens_before
+        self.tokens_after += r.tokens_after
+        self.tokens_saved += r.tokens_saved
+        if self.has_price:
+            self.usd_saved += estimate_savings(r, self.model, self.price)["usd_saved"]
 
     def install(self) -> "CostTracker":
         from .core import on_reduction
@@ -101,6 +99,6 @@ class CostTracker:
             "tokens_after": self.tokens_after,
             "tokens_saved": self.tokens_saved,
             "ratio": round(ratio, 4),
-            "usd_saved": round(self.usd_saved, 4) if self._has_price else None,
+            "usd_saved": round(self.usd_saved, 4) if self.has_price else None,
             "cache_safe": True,
         }

@@ -17,7 +17,7 @@ from __future__ import annotations
 import os
 from typing import Any, Callable, Optional
 
-from ..messages import reduce_messages
+from ._common import reduce_messages_in
 
 
 def _httpx_forwarder(upstream: str) -> Callable[[dict], Any]:
@@ -53,11 +53,7 @@ def create_app(forwarder: Optional[Callable[[dict], Any]] = None,
 
     @app.post("/v1/chat/completions")
     async def chat_completions(payload: dict = Body(...)):
-        if isinstance(payload, dict) and isinstance(payload.get("messages"), list):
-            try:
-                payload["messages"] = reduce_messages(payload["messages"], fmt="openai")
-            except Exception:
-                pass  # fail open
+        reduce_messages_in(payload, "openai", {})  # fail-open, in-place
         result = forward(payload)
         if hasattr(result, "__await__"):
             result = await result

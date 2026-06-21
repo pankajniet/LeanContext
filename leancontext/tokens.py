@@ -8,9 +8,15 @@ present — accounting precision is orthogonal to safety.
 
 from __future__ import annotations
 
+import hashlib
 from typing import Callable, Optional
 
 _counter: Optional[Callable[[str], int]] = None
+
+
+def content_ref(text: str) -> str:
+    """Short, stable content hash — the handle used for caching and paging."""
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:12]
 
 
 def count_tokens(text: str) -> int:

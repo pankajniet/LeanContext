@@ -11,12 +11,11 @@ in-memory by default, or disk-backed (under ``root``) for cross-process retrieva
 
 from __future__ import annotations
 
-import hashlib
 import os
 import re
 from typing import Optional
 
-from .tokens import count_tokens
+from .tokens import content_ref, count_tokens
 
 REF_SCHEME = "lc"
 _REF_RE = re.compile(r"lc://([0-9a-f]{6,40})")
@@ -35,7 +34,7 @@ class ContentStore:
         return os.path.join(self.root, f"{ref}.txt")  # type: ignore[arg-type]
 
     def put(self, content: str) -> str:
-        ref = hashlib.sha1(content.encode("utf-8")).hexdigest()[:12]
+        ref = content_ref(content)
         if self.root:
             with open(self._path(ref), "w", encoding="utf-8") as fh:
                 fh.write(content)

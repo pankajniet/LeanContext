@@ -86,8 +86,5 @@ def reduce(content: Any = None, /, **opts) -> Any:
     if isinstance(content, str):
         return reduce_text(content, **opts)
 
-    if isinstance(content, (list, tuple)) or (callable(content) and not isinstance(content, type)):
-        return wrap(content, **opts)
-
-    # framework tool object, or anything else -> best-effort wrap (fail open)
+    # callable, tool, list of tools, or SDK client -> best-effort wrap (fail open)
     return wrap(content, **opts)

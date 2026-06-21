@@ -11,6 +11,7 @@ import functools
 from typing import Any, Callable
 
 from ..core import reduce_text
+from ._common import is_wrapped, mark
 
 
 def wrap_callable(fn: Callable, **opts) -> Callable:
@@ -23,27 +24,21 @@ def wrap_callable(fn: Callable, **opts) -> Callable:
             return reduce_text(result, **opts).text
         return result
 
-    wrapper.__leancontext_wrapped__ = True  # type: ignore[attr-defined]
-    return wrapper
-
-
-def _already_wrapped(fn: Any) -> bool:
-    return getattr(fn, "__leancontext_wrapped__", False)
+    return mark(wrapper)
 
 
 def wrap(target: Any, **opts) -> Any:
     """Best-effort universal wrap.
 
-    Accepts a plain callable, a list/tuple of tools, or a framework tool object
-    that exposes its callable on a known attribute (LangChain ``Tool.func`` /
-    ``coroutine``, OpenAI-style ``.on_invoke``, etc.). Anything it doesn't
-    recognise is returned unchanged — fail open.
+    Accepts a plain callable, a list/tuple of tools, an OpenAI/Anthropic SDK client,
+    or a framework tool object exposing its callable on a known attribute. Anything
+    it doesn't recognise is returned unchanged — fail open.
     """
     if isinstance(target, (list, tuple)):
         return type(target)(wrap(t, **opts) for t in target)
 
     if callable(target) and not isinstance(target, type):
-        return target if _already_wrapped(target) else wrap_callable(target, **opts)
+        return target if is_wrapped(target) else wrap_callable(target, **opts)
 
     # SDK clients (OpenAI / Anthropic): reduce messages on .create.
     try:
@@ -59,7 +54,7 @@ def wrap(target: Any, **opts) -> Any:
     # Framework tool objects: wrap the underlying callable in place.
     for attr in ("func", "coroutine", "_run", "run", "on_invoke", "invoke"):
         inner = getattr(target, attr, None)
-        if callable(inner) and not _already_wrapped(inner):
+        if callable(inner) and not is_wrapped(inner):
             try:
                 setattr(target, attr, wrap_callable(inner, **opts))
             except Exception:

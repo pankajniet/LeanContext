@@ -7,7 +7,6 @@ we return the ORIGINAL text unchanged. Nothing here can corrupt an agent workflo
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import re
@@ -16,7 +15,7 @@ from typing import Callable, Optional
 
 from .fidelity import fidelity_score
 from .reducers import reduce_diff, reduce_html, reduce_json, reduce_logs, reduce_stacktrace
-from .tokens import count_tokens
+from .tokens import content_ref, count_tokens
 
 # --- configuration -----------------------------------------------------------
 
@@ -93,6 +92,10 @@ class Reduction:
         if self.tokens_before == 0:
             return 0.0
         return 1.0 - self.tokens_after / self.tokens_before
+
+    @property
+    def tokens_saved(self) -> int:
+        return max(0, self.tokens_before - self.tokens_after)
 
     @property
     def applied(self) -> bool:
@@ -177,22 +180,25 @@ def reduce_text(
 
     original = _to_text(content)
     before = count_tokens(original)
-    ref = hashlib.sha1(original.encode("utf-8")).hexdigest()[:12]
+    ref = content_ref(original)
+
+    def passthrough(notes: list[str]) -> Reduction:
+        return _passthrough(original, before, ref, notes)
 
     if is_disabled():
-        return _passthrough(original, before, ref, ["disabled"])
+        return passthrough(["disabled"])
     if before < CONFIG.min_tokens:
-        return _passthrough(original, before, ref, ["below min_tokens"])
+        return passthrough(["below min_tokens"])
 
     detected = detect_kind(original) if kind == "auto" else kind
     reducer = REDUCERS.get(detected)
     if reducer is None:
-        return _passthrough(original, before, ref, [f"no reducer for kind={detected!r}"])
+        return passthrough([f"no reducer for kind={detected!r}"])
 
     try:
         text, notes = reducer(original)
     except Exception as exc:  # fail open on any reducer bug
-        return _passthrough(original, before, ref, [f"reducer error: {exc!r}"])
+        return passthrough([f"reducer error: {exc!r}"])
 
     after = count_tokens(text)
     saving = 0.0 if before == 0 else 1.0 - after / before
@@ -200,7 +206,7 @@ def reduce_text(
 
     if saving < min_saving or fid < min_fidelity:
         notes.append(f"reverted: saving={saving:.0%}, fidelity={fid:.0%} (below threshold)")
-        return _passthrough(original, before, ref, notes)
+        return passthrough(notes)
 
     result = Reduction(text, detected, before, after, fid, ref, original, notes)
     _emit(result)

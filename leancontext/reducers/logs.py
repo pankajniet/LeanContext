@@ -46,14 +46,14 @@ def reduce_logs(text: str) -> tuple[str, list[str]]:
         if not line.strip():
             continue
         key = _template(line)
+        sev = bool(_SEVERITY.search(line))
         g = groups.get(key)
         if g is None:
-            groups[key] = [line, 1, bool(_SEVERITY.search(line))]
+            groups[key] = [line, 1, sev]
             order.append(key)
         else:
             g[1] += 1
-            if not g[2] and _SEVERITY.search(line):
-                g[2] = True
+            g[2] = g[2] or sev
 
     out: list[str] = []
     kept_verbatim = 0

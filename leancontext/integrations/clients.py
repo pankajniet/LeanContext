@@ -8,36 +8,16 @@ runs untouched. Reductions are deterministic, so the prompt-cache prefix stays s
 
 from __future__ import annotations
 
-import functools
 from typing import Any
 
-from ..messages import reduce_messages
-
-
-def _wrap_create(create: Any, fmt: str, opts: dict) -> Any:
-    @functools.wraps(create)
-    def wrapper(*args, **kwargs):
-        if "messages" in kwargs:
-            try:
-                kwargs["messages"] = reduce_messages(kwargs["messages"], fmt=fmt, **opts)
-            except Exception:
-                pass  # fail open
-        return create(*args, **kwargs)
-
-    wrapper.__leancontext_wrapped__ = True  # type: ignore[attr-defined]
-    return wrapper
-
-
-def _already(fn: Any) -> bool:
-    return getattr(fn, "__leancontext_wrapped__", False)
+from ._common import wrap_messages_create
 
 
 def wrap_openai(client: Any, **opts) -> Any:
     """Reduce tool outputs on an OpenAI client's chat.completions.create."""
     try:
         comp = client.chat.completions
-        if not _already(comp.create):
-            comp.create = _wrap_create(comp.create, "openai", opts)
+        comp.create = wrap_messages_create(comp.create, fmt="openai", opts=opts)
     except Exception:
         pass  # fail open
     return client
@@ -46,9 +26,7 @@ def wrap_openai(client: Any, **opts) -> Any:
 def wrap_anthropic(client: Any, **opts) -> Any:
     """Reduce tool_result blocks on an Anthropic client's messages.create."""
     try:
-        msgs = client.messages
-        if not _already(msgs.create):
-            msgs.create = _wrap_create(msgs.create, "anthropic", opts)
+        client.messages.create = wrap_messages_create(client.messages.create, fmt="anthropic", opts=opts)
     except Exception:
         pass  # fail open
     return client
