@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 from collections import OrderedDict
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -36,11 +37,13 @@ CONFIG = _Config()
 # A tool output is re-sent on every turn, so we reduce each unique payload once and
 # reuse the result. Keyed by content hash + options; deterministic, so this is safe.
 _CACHE: OrderedDict[tuple, Reduction] = OrderedDict()
+_CACHE_LOCK = threading.Lock()
 
 
 def clear_cache() -> None:
     """Drop all cached reductions."""
-    _CACHE.clear()
+    with _CACHE_LOCK:
+        _CACHE.clear()
 
 
 def disable() -> None:
@@ -167,15 +170,20 @@ def reduce_text(
     key = (ref, kind, min_saving, min_fidelity, CONFIG.min_tokens, CONFIG.max_input_chars)
     use_cache = CONFIG.cache_size > 0
 
-    if use_cache and key in _CACHE:
-        result = _CACHE[key]
-        _CACHE.move_to_end(key)
-    else:
+    result = None
+    if use_cache:
+        with _CACHE_LOCK:
+            result = _CACHE.get(key)
+            if result is not None:
+                _CACHE.move_to_end(key)
+
+    if result is None:
         result = _compute(original, before, ref, kind, min_saving, min_fidelity)
         if use_cache:
-            _CACHE[key] = result
-            if len(_CACHE) > CONFIG.cache_size:
-                _CACHE.popitem(last=False)  # evict least-recently-used
+            with _CACHE_LOCK:
+                _CACHE[key] = result
+                if len(_CACHE) > CONFIG.cache_size:
+                    _CACHE.popitem(last=False)  # evict least-recently-used
 
     if result.applied:
         _emit(result)

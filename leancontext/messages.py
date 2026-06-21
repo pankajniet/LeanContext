@@ -22,6 +22,8 @@ def detect_format(messages: list) -> str:
     for m in messages:
         if not isinstance(m, dict):
             continue
+        if m.get("type") == "function_call_output":
+            return "responses"
         if isinstance(m.get("parts"), list):
             return "gemini"
         if m.get("role") in ("tool", "function"):
@@ -133,6 +135,22 @@ def _reduce_gemini_message(content: Any, opts: dict) -> Any:
     return {**content, "parts": new_parts}
 
 
+# --- OpenAI Responses API format ---------------------------------------------
+# The Responses API uses `input` (not `messages`); a tool result is an item with
+# type "function_call_output" whose `output` is a string.
+
+def _reduce_responses_message(item: Any, opts: dict) -> Any:
+    if (
+        isinstance(item, dict)
+        and item.get("type") == "function_call_output"
+        and isinstance(item.get("output"), str)
+    ):
+        new_item = dict(item)
+        new_item["output"] = _reduce_str(item["output"], opts)
+        return new_item
+    return item
+
+
 # --- public ------------------------------------------------------------------
 
 def reduce_messages(messages: Any, *, fmt: str = "auto", **opts) -> Any:
@@ -149,4 +167,6 @@ def reduce_messages(messages: Any, *, fmt: str = "auto", **opts) -> Any:
         return [_reduce_anthropic_message(m, opts) for m in messages]
     if resolved == "gemini":
         return [_reduce_gemini_message(m, opts) for m in messages]
+    if resolved == "responses":
+        return [_reduce_responses_message(m, opts) for m in messages]
     return [_reduce_openai_message(m, opts) for m in messages]

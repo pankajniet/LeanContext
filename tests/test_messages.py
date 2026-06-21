@@ -52,6 +52,17 @@ def test_input_not_mutated():
     assert tool["content"] == before            # original list/dicts untouched
 
 
+def test_responses_format_reduced():
+    items = [
+        {"role": "user", "content": "why did it crash?"},
+        {"type": "function_call_output", "call_id": "c1", "output": _log()},
+    ]
+    out = reduce_messages(items)                 # auto-detect -> responses
+    assert out[0] == items[0]                    # the user message is untouched
+    reduced = out[1]["output"]
+    assert len(reduced) < len(_log()) and "root cause" in reduced
+
+
 def test_non_list_passthrough():
     assert reduce_messages("not a list") == "not a list"
 

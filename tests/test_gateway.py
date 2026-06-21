@@ -36,6 +36,26 @@ def test_wrap_openai_client_reduces_messages():
     assert len(sent) < len(_big_log()) and "root cause" in sent
 
 
+def test_wrap_openai_responses_api():
+    openai = pytest.importorskip("openai")
+    client = openai.OpenAI(api_key="test-key")
+    if not hasattr(client, "responses"):
+        pytest.skip("Responses API not in this openai version")
+
+    captured = {}
+    client.responses.create = lambda **kw: captured.update(kw) or "OK"
+
+    from leancontext import wrap_openai
+    wrap_openai(client)
+
+    client.responses.create(
+        model="gpt-4o",
+        input=[{"type": "function_call_output", "call_id": "c", "output": _big_log()}],
+    )
+    sent = captured["input"][0]["output"]
+    assert len(sent) < len(_big_log()) and "root cause" in sent
+
+
 def test_wrap_anthropic_client_reduces_tool_results():
     anthropic = pytest.importorskip("anthropic")
     client = anthropic.Anthropic(api_key="test-key")

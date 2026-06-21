@@ -5,6 +5,18 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [2.0.4] - 2026-06-21
+
+### Fixed
+- README uses absolute image and link URLs so the logo and links render on the PyPI
+  project page (relative paths only resolve on GitHub).
+- The reduction cache is now thread-safe (guarded by a lock) for multi-threaded agents.
+
+### Added
+- OpenAI Responses API support: `reduce_messages` and `wrap_openai` handle `input`
+  with `function_call_output` items.
+- PyPI downloads badge, `SUPPORT.md`, and a CodeQL security-scanning workflow.
+
 ## [2.0.2] - 2026-06-21
 
 ### Changed
@@ -34,6 +46,7 @@ All notable changes to this project are documented here. The format is based on
 - Targets Python 3.14; ruff, mypy, and coverage run in CI; examples, contributor, and
   security docs included.
 
-[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.2...HEAD
+[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.4...HEAD
+[2.0.4]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.4
 [2.0.2]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.2
 [2.0.0]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.0

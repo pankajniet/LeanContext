@@ -15,10 +15,15 @@ from ._common import wrap_messages_create
 
 
 def wrap_openai(client: Any, **opts) -> Any:
-    """Reduce tool outputs on an OpenAI client's chat.completions.create."""
+    """Reduce tool outputs on an OpenAI client's chat.completions and responses APIs."""
     try:
         comp = client.chat.completions
         comp.create = wrap_messages_create(comp.create, fmt="openai", opts=opts)
+    except Exception:
+        pass  # fail open
+    try:
+        responses = client.responses
+        responses.create = wrap_messages_create(responses.create, fmt="responses", opts=opts, key="input")
     except Exception:
         pass  # fail open
     return client

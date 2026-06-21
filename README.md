@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="LeanContext" width="460">
+  <img src="https://raw.githubusercontent.com/pankajniet/LeanContext/main/assets/logo.png" alt="LeanContext" width="460">
 </p>
 
 <p align="center">
@@ -8,7 +8,8 @@
 
 <p align="center">
   <a href="https://pypi.org/project/leancontext/"><img alt="PyPI" src="https://img.shields.io/pypi/v/leancontext.svg"></a>
-  <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
+  <a href="https://pypi.org/project/leancontext/"><img alt="Downloads" src="https://img.shields.io/pypi/dm/leancontext.svg"></a>
+  <a href="https://github.com/pankajniet/LeanContext/blob/main/LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue.svg">
   <a href="https://github.com/pankajniet/LeanContext/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/pankajniet/LeanContext/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://github.com/astral-sh/ruff"><img alt="Ruff" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json"></a>
@@ -146,7 +147,7 @@ Anything else, or any payload below the size, saving, or fidelity thresholds, pa
 Each tool output flows through fail-open gates (hash, size check, type detection, the typed
 reducer, then a saving and fidelity check) and returns either the reduced text or the original.
 Results are cached by content hash, so a payload re-sent across turns is reduced only once.
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for diagrams.
+See [docs/ARCHITECTURE.md](https://github.com/pankajniet/LeanContext/blob/main/docs/ARCHITECTURE.md) for diagrams.
 
 ## Cost and telemetry
 
@@ -175,8 +176,8 @@ adapters, broader Anthropic native interop, and a PyPI release.
 ## Contributing
 
 Issues and PRs welcome. Run `pytest`. Reducers are pure functions, `str -> (reduced, notes)`,
-and must be deterministic and value-preserving. See [AGENTS.md](AGENTS.md) for the design rules.
+and must be deterministic and value-preserving. See [AGENTS.md](https://github.com/pankajniet/LeanContext/blob/main/AGENTS.md) for the design rules.
 
 ## License
 
-[Apache-2.0](LICENSE)
+[Apache-2.0](https://github.com/pankajniet/LeanContext/blob/main/LICENSE)
