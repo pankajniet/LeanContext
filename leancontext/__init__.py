@@ -35,6 +35,7 @@ from .core import (
     reduce_text,
     remove_reduction_hook,
 )
+from .cost import CostTracker, estimate_savings, set_price
 from .integrations import wrap, wrap_anthropic, wrap_callable, wrap_openai
 from .messages import detect_format, reduce_messages
 from .tokens import count_tokens, set_token_counter, use_tiktoken
@@ -61,6 +62,9 @@ __all__ = [
     "count_tokens",
     "set_token_counter",
     "use_tiktoken",
+    "estimate_savings",
+    "CostTracker",
+    "set_price",
     "CONFIG",
     "__version__",
 ]
