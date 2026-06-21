@@ -12,6 +12,7 @@ dependencies = []
 [project.optional-dependencies]
 tiktoken = ["tiktoken>=0.5"]
 otel = ["opentelemetry-api>=1.20"]
+integrations = ["fastapi", "httpx", "starlette", "openai", "anthropic", "litellm"]
 dev = ["pytest>=7", "opentelemetry-sdk>=1.20"]
 
 [project.scripts]
