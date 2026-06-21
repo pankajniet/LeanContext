@@ -1,9 +1,9 @@
 [project]
 name = "leancontext"
-version = "2.0.0"
+version = "2.0.2"
 description = "Deterministic, type-aware reduction of agent tool outputs at the source. Cut LLM token cost without making the agent do less."
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Pankaj Pandey" }]
 keywords = ["llm", "agents", "tokens", "cost", "context", "compression", "rag"]
@@ -12,6 +12,10 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries",
     "Typing :: Typed",
@@ -49,7 +53,7 @@ filterwarnings = ["ignore::UserWarning:requests"]
 
 [tool.ruff]
 line-length = 110
-target-version = "py314"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
@@ -59,5 +63,5 @@ select = ["E", "F", "I", "UP", "B"]
 extend-immutable-calls = ["fastapi.Body", "fastapi.Depends", "fastapi.Query"]
 
 [tool.mypy]
-python_version = "3.14"
+python_version = "3.10"
 ignore_missing_imports = true

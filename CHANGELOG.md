@@ -5,6 +5,12 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-06-21
+
+### Changed
+- Lower the minimum Python from 3.14 to 3.10 so the package installs on current
+  interpreters (the code already supports 3.10+; CI runs 3.10 through 3.14).
+
 ## [2.0.0] - 2026-06-21
 
 ### Added
@@ -28,5 +34,6 @@ All notable changes to this project are documented here. The format is based on
 - Targets Python 3.14; ruff, mypy, and coverage run in CI; examples, contributor, and
   security docs included.
 
-[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.2...HEAD
+[2.0.2]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.2
 [2.0.0]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.0

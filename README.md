@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://pypi.org/project/leancontext/"><img alt="PyPI" src="https://img.shields.io/pypi/v/leancontext.svg"></a>
   <a href="LICENSE"><img alt="License: Apache 2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
-  <img alt="Python 3.14+" src="https://img.shields.io/badge/python-3.14%2B-blue.svg">
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue.svg">
   <a href="https://github.com/pankajniet/LeanContext/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/pankajniet/LeanContext/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://github.com/astral-sh/ruff"><img alt="Ruff" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json"></a>
   <img alt="mypy" src="https://img.shields.io/badge/types-mypy-blue.svg">
