@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="LeanContext" width="440">
+  <img src="assets/logo.png" alt="LeanContext" width="440">
 </p>
 
 <p align="center">
