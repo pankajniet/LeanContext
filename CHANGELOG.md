@@ -5,6 +5,13 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [2.0.5] - 2026-06-21
+
+### Security
+- Fix a path traversal in the disk-backed paging store: `expand()` and `ContentStore.get()`
+  now accept only content-hash ids, so a crafted reference can no longer read files outside
+  the store (reachable via the MCP `expand` tool). The default in-memory store was unaffected.
+
 ## [2.0.4] - 2026-06-21
 
 ### Fixed
@@ -46,7 +53,8 @@ All notable changes to this project are documented here. The format is based on
 - Targets Python 3.14; ruff, mypy, and coverage run in CI; examples, contributor, and
   security docs included.
 
-[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.4...HEAD
+[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.5...HEAD
+[2.0.5]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.5
 [2.0.4]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.4
 [2.0.2]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.2
 [2.0.0]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.0

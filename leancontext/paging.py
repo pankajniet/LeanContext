@@ -18,6 +18,7 @@ from .tokens import content_ref, count_tokens
 
 REF_SCHEME = "lc"
 _REF_RE = re.compile(r"lc://([0-9a-f]{6,40})")
+_HEX_REF = re.compile(r"[0-9a-f]{6,40}")   # a valid content-hash id (no path chars)
 
 
 class ContentStore:
@@ -42,6 +43,8 @@ class ContentStore:
         return ref
 
     def get(self, ref: str) -> str | None:
+        if not _HEX_REF.fullmatch(ref):   # only content-hash ids; blocks path traversal
+            return None
         if self.root:
             try:
                 with open(self._path(ref), encoding="utf-8") as fh:
@@ -54,9 +57,12 @@ class ContentStore:
 _DEFAULT_STORE = ContentStore()
 
 
-def _normalize(ref: str) -> str:
+def _normalize(ref: str) -> str | None:
     m = _REF_RE.search(ref)
-    return m.group(1) if m else ref.strip()
+    if m:
+        return m.group(1)
+    ref = ref.strip()
+    return ref if _HEX_REF.fullmatch(ref) else None
 
 
 def store(content: str, using: ContentStore | None = None) -> str:
@@ -66,7 +72,10 @@ def store(content: str, using: ContentStore | None = None) -> str:
 
 def expand(ref: str, using: ContentStore | None = None) -> str | None:
     """Return the original content for a ref (accepts 'lc://<id>' or a bare id)."""
-    return (using or _DEFAULT_STORE).get(_normalize(ref))
+    norm = _normalize(ref)
+    if norm is None:
+        return None
+    return (using or _DEFAULT_STORE).get(norm)
 
 
 def reference_line(content: str, summary: str | None = None,

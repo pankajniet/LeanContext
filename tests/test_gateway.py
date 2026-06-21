@@ -56,6 +56,26 @@ def test_wrap_openai_responses_api():
     assert len(sent) < len(_big_log()) and "root cause" in sent
 
 
+def test_wrap_async_openai_client_reduces_messages():
+    openai = pytest.importorskip("openai")
+    client = openai.AsyncOpenAI(api_key="test-key")
+
+    captured = {}
+
+    async def fake(**kw):
+        captured.update(kw)
+        return "OK"
+
+    client.chat.completions.create = fake
+
+    from leancontext import wrap_openai
+    wrap_openai(client)
+
+    asyncio.run(client.chat.completions.create(model="gpt-4o", messages=[_openai_tool_msg()]))
+    sent = captured["messages"][0]["content"]
+    assert len(sent) < len(_big_log()) and "root cause" in sent
+
+
 def test_wrap_anthropic_client_reduces_tool_results():
     anthropic = pytest.importorskip("anthropic")
     client = anthropic.Anthropic(api_key="test-key")

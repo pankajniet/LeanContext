@@ -44,3 +44,14 @@ def test_expand_tool_spec_shape():
     spec = paging.EXPAND_TOOL_SPEC
     assert spec["name"] == "leancontext_expand"
     assert spec["input_schema"]["required"] == ["ref"]
+
+
+def test_expand_rejects_path_traversal(tmp_path):
+    store = paging.ContentStore(root=str(tmp_path))
+    secret = tmp_path.parent / "leak.txt"
+    secret.write_text("TOPSECRET")
+    # refs that aren't content hashes must never resolve to a filesystem path
+    for evil in ("../leak", "../../etc/hosts", "/etc/hosts", "..%2Fleak"):
+        assert paging.expand(evil, using=store) is None
+        assert store.get(evil) is None
+
