@@ -13,7 +13,7 @@ dependencies = []
 tiktoken = ["tiktoken>=0.5"]
 otel = ["opentelemetry-api>=1.20"]
 integrations = ["fastapi", "httpx", "starlette", "openai", "anthropic", "litellm"]
-dev = ["pytest>=7", "opentelemetry-sdk>=1.20"]
+dev = ["pytest>=7", "pytest-asyncio>=0.23", "opentelemetry-sdk>=1.20"]
 
 [project.scripts]
 leancontext = "leancontext.cli:main"
@@ -24,3 +24,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["leancontext"]
+
+[tool.pytest.ini_options]
+# pytest-asyncio: pin the fixture loop scope so it stops warning about the unset default.
+asyncio_default_fixture_loop_scope = "function"
+# Silence a urllib3/chardet version-mismatch warning from the local conda env (not our code).
+filterwarnings = ["ignore::UserWarning:requests"]
