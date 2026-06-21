@@ -1,0 +1,25 @@
+[project]
+name = "leancontext"
+version = "0.0.1"
+description = "Deterministic, type-aware reduction of agent tool outputs at the source. Cut LLM token cost without making the agent do less."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Pankaj" }]
+keywords = ["llm", "agents", "tokens", "cost", "context", "compression", "rag"]
+dependencies = []
+
+[project.optional-dependencies]
+tiktoken = ["tiktoken>=0.5"]
+otel = ["opentelemetry-api>=1.20"]
+dev = ["pytest>=7", "opentelemetry-sdk>=1.20"]
+
+[project.scripts]
+leancontext = "leancontext.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["leancontext"]
