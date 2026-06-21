@@ -63,6 +63,16 @@ Reproduce with `python bench.py` (representative tool outputs, heuristic token c
 Because the cost is paid *every turn the payload stays in context*, the real saving is this
 multiplied by the number of turns it's held.
 
+## How it's different
+
+- **vs. LLM-based prompt compressors** — there's no model in the reduction path, so it's
+  deterministic, adds no latency or per-call cost, has no language bias, and can't "compress
+  away" the wrong thing. It also won't bust the provider's prompt cache.
+- **vs. wire-level proxies** — it reduces at the source, where the content type is still known,
+  so it's type-aware: it keeps error/anomaly lines verbatim and never edits your instructions.
+- **vs. doing nothing** — large, safe savings on the payloads that dominate agent cost, and it
+  *composes* with prompt caching and Anthropic's native context editing rather than fighting them.
+
 ## Install
 
 ```bash
