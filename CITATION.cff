@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use LeanContext, please cite it."
+title: LeanContext
+abstract: >-
+  Deterministic, measurable context reduction for LLM agents. Trims the tool
+  output an agent re-sends to the model every turn, keeping the signal.
+authors:
+  - family-names: Pandey
+    given-names: Pankaj
+repository-code: "https://github.com/pankajniet/LeanContext"
+license: Apache-2.0
+version: 2.0.0
+date-released: "2026-06-21"
+keywords:
+  - llm
+  - ai-agents
+  - context-engineering
+  - tokens
+  - cost-optimization
