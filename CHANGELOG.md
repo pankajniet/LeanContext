@@ -5,6 +5,24 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-06-22
+
+### Fixed
+- Fidelity checks now match values as whole tokens instead of substrings, so the gate
+  no longer over-reports preservation and lets real loss through:
+  - **JSON**: scalar values are matched as a multiset of whole JSON-encoded tokens.
+    A dropped value that is a substring of a survivor (e.g. `"1"` inside `"100"`), or a
+    dropped duplicate, now lowers the score instead of counting as preserved.
+  - **HTML**: visible text is matched on distinct whole words. A flood of common words
+    (`the`, `on`, …) no longer masks the loss of a few rare-but-important ones, and
+    `cat` no longer counts as present because the output contains `category`.
+  - **Stack traces**: every exception message and chain marker must survive, not only
+    the last line. A *chained* traceback whose earlier root cause is collapsed now
+    scores low and reverts (fail-open) instead of silently dropping the cause.
+- Diff detection no longer fires on prose that merely contains an `@@ … @@`-shaped line:
+  a hunk header now counts as a diff only when accompanied by actual `+`/`-` change
+  lines, so the context-collapsing reducer can't run on non-diff text.
+
 ## [2.0.8] - 2026-06-21
 
 ### Fixed
@@ -101,7 +119,8 @@ superseded by 2.0.2. Version 2.0.3 was never published.
 - Targets Python 3.14; ruff, mypy, and coverage run in CI; examples, contributor, and
   security docs included.
 
-[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.8...HEAD
+[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/pankajniet/LeanContext/releases/tag/v2.1.0
 [2.0.8]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.8
 [2.0.7]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.7
 [2.0.6]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.6

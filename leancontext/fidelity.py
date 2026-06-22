@@ -1,16 +1,20 @@
 """Fidelity scoring: did the signal survive the reduction?
 
 The score is per content type. For logs and text we check that error/anomaly
-lines and the values on them are kept. For JSON, diff, and stack traces we check
-the type-specific invariants that make those reductions safe (all values, all
-change lines, the exception). If the score falls below the threshold, the core
-reverts to the original.
+lines and the values on them are kept. Each structured type checks the invariant
+that makes its reduction safe: JSON matches every scalar value as a whole encoded
+token (multiset); diff keeps every change line; a stack trace keeps every
+exception message and chain marker; HTML keeps the distinct visible words; a table
+keeps each row's non-space content. Matching is by whole token, not substring, so
+a dropped value can't be masked by a longer one that contains it. If the score
+falls below the threshold, the core reverts to the original.
 """
 
 from __future__ import annotations
 
 import json
 import re
+from collections import Counter
 from typing import Any
 
 _SEVERITY = re.compile(r"(?i)\b(error|fatal|critical|exception|panic|traceback|warn|warning)\b")
@@ -59,27 +63,45 @@ def _iter_scalars(data: Any):
         yield data
 
 
+# JSON scalar tokens, matched as whole tokens (not substrings): a quoted string is
+# self-delimiting, and a number is bounded so "1" no longer counts as preserved just
+# because it sits inside "100" or "0.1".
+_JSON_STR = re.compile(r'"(?:[^"\\]|\\.)*"')
+_JSON_NUM = re.compile(r"-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?")
+
+
+def _scalar_tokens(text: str) -> Counter:
+    """Multiset of JSON scalar tokens (quoted strings, then numbers) found in ``text``."""
+    counts: Counter = Counter()
+    for m in _JSON_STR.finditer(text):
+        counts[m.group()] += 1
+    # Strip strings first so digits inside a string value aren't counted as numbers.
+    for m in _JSON_NUM.finditer(_JSON_STR.sub(" ", text)):
+        counts[m.group()] += 1
+    return counts
+
+
 def _json_fidelity(original: str, reduced: str) -> float:
     """Fraction of JSON scalar values (strings and numbers) preserved in the output.
 
-    Values are matched in their JSON-encoded form (the reducer emits them that way),
-    so a value containing a delimiter, quote, or newline only counts as preserved if
-    its exact escaped bytes survive — the check sees structural corruption, not just
-    whether the characters appear somewhere.
+    Values are matched in their JSON-encoded form (the reducer emits them that way)
+    as a *multiset*: a value counts as preserved only if a distinct, whole encoded
+    token survives for it. So dropping a record whose value happens to be a substring
+    of a surviving one (e.g. "1" inside "100"), or dropping one of several duplicates,
+    lowers the score — the check sees structural loss, not mere character overlap.
     """
     try:
         data = json.loads(original)
     except Exception:
         return 1.0
-    values = [
-        json.dumps(v, ensure_ascii=False).strip('"')
-        for v in _iter_scalars(data)
-    ]
-    values = [v for v in values if v]
-    if not values:
+    want: Counter = Counter()
+    for v in _iter_scalars(data):
+        want[json.dumps(v, ensure_ascii=False)] += 1
+    if not want:
         return 1.0
-    kept = sum(1 for v in values if v in reduced)
-    return kept / len(values)
+    have = _scalar_tokens(reduced)
+    kept = sum(min(n, have.get(tok, 0)) for tok, n in want.items())
+    return kept / sum(want.values())
 
 
 def _diff_fidelity(original: str, reduced: str) -> float:
@@ -96,11 +118,26 @@ def _diff_fidelity(original: str, reduced: str) -> float:
 
 
 def _stacktrace_fidelity(original: str, reduced: str) -> float:
-    """The exception line (the last non-empty line) must be preserved."""
-    lines = [ln for ln in original.splitlines() if ln.strip()]
-    if not lines:
+    """Every exception/chain line must be preserved, not only the last.
+
+    The non-indented lines of a traceback carry its semantics: each exception
+    message and each chain marker ("During handling of the above exception ...",
+    "The above exception was the direct cause ..."). Frame lines (``File "..."``,
+    source, carets) are indented and may be collapsed. We exclude the structural
+    ``Traceback (most recent call last):`` header (a reduction may abbreviate it),
+    and require every remaining non-indented line to survive — so a *chained*
+    traceback whose earlier root cause is collapsed scores low and reverts, instead
+    of silently dropping the cause as the old last-line-only check allowed.
+    """
+    semantic = [
+        ln for ln in original.splitlines()
+        if ln.strip() and ln[:1] not in (" ", "\t")
+        and ln.strip() != "Traceback (most recent call last):"
+    ]
+    if not semantic:
         return 1.0
-    return 1.0 if lines[-1] in reduced else 0.0
+    kept = sum(1 for ln in semantic if ln in reduced)
+    return kept / len(semantic)
 
 
 def _html_fidelity(original: str, reduced: str) -> float:
@@ -118,10 +155,15 @@ def _html_fidelity(original: str, reduced: str) -> float:
         parser.feed(original)
     except Exception:
         return 1.0
-    words = [w for part in parser.parts for w in part.split() if w]
+    # Distinct words, matched as whole tokens against the output's word set. Counting
+    # distinct words (not every occurrence) stops a flood of common words like "the"
+    # from masking the loss of a few rare-but-important ones; whole-token matching
+    # stops "cat" from counting as present because the output contains "category".
+    words = {w for part in parser.parts for w in part.split() if w}
     if not words:
         return 1.0
-    kept = sum(1 for w in words if w in reduced)
+    have = set(reduced.split())
+    kept = sum(1 for w in words if w in have)
     return kept / len(words)
 
 

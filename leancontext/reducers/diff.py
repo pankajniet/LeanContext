@@ -48,7 +48,17 @@ def reduce_diff(text: str) -> tuple[str, list[str]]:
 
 
 def _detect(text: str) -> bool:
-    return text.lstrip().startswith("diff --git") or bool(_DIFF_HUNK.search(text))
+    if text.lstrip().startswith("diff --git"):
+        return True
+    # A hunk header alone can occur in prose or docs; only treat it as a diff when
+    # actual change lines accompany it, so the context-collapsing reducer doesn't
+    # run on non-diff text (which would drop lines while fidelity still reads 1.0).
+    if not _DIFF_HUNK.search(text):
+        return False
+    return any(
+        ln[:1] in "+-" and not ln.startswith(("+++", "---"))
+        for ln in text.splitlines()
+    )
 
 
 REDUCER = Reducer("diff", _detect, reduce_diff, priority=30)

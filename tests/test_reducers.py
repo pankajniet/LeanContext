@@ -17,6 +17,22 @@ def test_diff_keeps_changes_collapses_context():
     assert r.tokens_after < r.tokens_before
 
 
+def test_diff_detection_ignores_hunk_shaped_prose():
+    from leancontext.reducers.diff import _detect
+
+    # A hunk-shaped line inside prose, with no real +/- change lines: must NOT be
+    # treated as a diff (else the context-collapsing reducer would drop prose lines).
+    prose = (
+        "Release notes for the range @@ -1,2 +3,4 @@ in the spec.\n"
+        "This paragraph explains the change in plain words.\n"
+        "It spans several lines of ordinary text.\n"
+        "None of which are diff change lines."
+    )
+    assert _detect(prose) is False
+    # a genuine hunk with change lines is still detected
+    assert _detect("@@ -1,2 +1,2 @@\n context\n-old\n+new") is True
+
+
 # --- stacktrace --------------------------------------------------------------
 
 def _trace(n=30):
