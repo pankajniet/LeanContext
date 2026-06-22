@@ -30,3 +30,17 @@ def test_prose_is_not_treated_as_table():
         "This is an ordinary sentence of prose without any aligned columns." for _ in range(8)
     )
     assert leancontext.reduce(prose).kind != "table"
+
+
+def test_table_preserves_internal_value_spaces():
+    # a value containing its own double-space must survive (regression: the old
+    # reducer collapsed every run of spaces, silently corrupting such values)
+    from leancontext.reducers.table import reduce_table
+
+    rows = ["NAME       STATUS    NOTE"]
+    for i in range(12):
+        note = "out of  memory" if i == 3 else f"ok run {i}"
+        rows.append(f"pod-{i:04d}   Running   {note}")
+    out, _ = reduce_table("\n".join(rows))
+    assert "out of  memory" in out                     # internal double-space kept
+    assert out.splitlines()[0] == "NAME STATUS NOTE"   # alignment padding still collapsed

@@ -1,7 +1,15 @@
 import json
 
 import leancontext
-from leancontext.core import reduce_text
+from leancontext.core import Reduction, reduce_text
+
+
+def test_ratio_never_negative():
+    # a (reverted) longer result must not report a negative ratio; stays consistent with tokens_saved
+    r = Reduction(text="x", kind="passthrough", tokens_before=10, tokens_after=20,
+                  fidelity=1.0, ref="abc", original="x")
+    assert r.ratio == 0.0
+    assert r.tokens_saved == 0
 
 
 def _log(n=600):

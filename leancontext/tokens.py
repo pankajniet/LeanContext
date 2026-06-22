@@ -53,10 +53,22 @@ def count_tokens(text: str) -> int:
     return _auto(text)  # type: ignore[misc]
 
 
+def _invalidate_cache() -> None:
+    # token counts feed cached reductions' numbers and the revert decision, so a
+    # tokenizer change must drop the cache to avoid returning stale counts.
+    try:
+        from .core import clear_cache
+
+        clear_cache()
+    except Exception:
+        pass
+
+
 def set_token_counter(fn: Callable[[str], int] | None) -> None:
     """Set a custom token counter, or pass None to fall back to auto-detection."""
     global _counter
     _counter = fn
+    _invalidate_cache()
 
 
 def use_tiktoken(model: str = "gpt-4o") -> None:

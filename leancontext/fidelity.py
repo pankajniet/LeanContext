@@ -125,11 +125,29 @@ def _html_fidelity(original: str, reduced: str) -> float:
     return kept / len(words)
 
 
+def _table_fidelity(original: str, reduced: str) -> float:
+    """Fraction of table rows whose non-space content survives.
+
+    The table reducer only removes whitespace, so every row's non-space characters
+    must still appear (in order) in the output. Stripping all whitespace before
+    comparing ignores the alignment the reducer is allowed to drop, while still
+    catching a dropped row or a lost value character.
+    """
+    rows = [re.sub(r"\s+", "", ln) for ln in original.splitlines() if ln.strip()]
+    rows = [r for r in rows if r]
+    if not rows:
+        return 1.0
+    blob = re.sub(r"\s+", "", reduced)
+    kept = sum(1 for r in rows if r in blob)
+    return kept / len(rows)
+
+
 _TYPED = {
     "json": _json_fidelity,
     "diff": _diff_fidelity,
     "stacktrace": _stacktrace_fidelity,
     "html": _html_fidelity,
+    "table": _table_fidelity,
 }
 
 

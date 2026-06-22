@@ -5,6 +5,20 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [2.0.8] - 2026-06-21
+
+### Fixed
+- Table reducer no longer corrupts values. It used to collapse every run of 2+ spaces,
+  silently mangling any value with internal double-spaces (and fidelity, which used the
+  salience check, reported 100%). It now detects column boundaries, slices each row into
+  cells, and drops only each cell's trailing alignment padding — internal spaces are kept.
+- Table fidelity is now content-aware (`_table_fidelity`): it verifies every row's
+  non-space content survives, so a dropped row or lost character trips the gate.
+- `Reduction.ratio` is clamped at 0, so a reverted longer result can't report a negative
+  ratio (now consistent with `tokens_saved`).
+- Changing the tokenizer (`set_token_counter` / `use_tiktoken`) clears the reduction
+  cache, so cached token counts and revert decisions can't go stale.
+
 ## [2.0.7] - 2026-06-21
 
 ### Fixed
@@ -87,7 +101,8 @@ superseded by 2.0.2. Version 2.0.3 was never published.
 - Targets Python 3.14; ruff, mypy, and coverage run in CI; examples, contributor, and
   security docs included.
 
-[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.7...HEAD
+[Unreleased]: https://github.com/pankajniet/LeanContext/compare/v2.0.8...HEAD
+[2.0.8]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.8
 [2.0.7]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.7
 [2.0.6]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.6
 [2.0.5]: https://github.com/pankajniet/LeanContext/releases/tag/v2.0.5

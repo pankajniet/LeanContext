@@ -105,7 +105,9 @@ class Reduction:
     def ratio(self) -> float:
         if self.tokens_before == 0:
             return 0.0
-        return 1.0 - self.tokens_after / self.tokens_before
+        # clamp to 0 so a (reverted) longer result never reports a negative ratio,
+        # matching tokens_saved which already floors at 0
+        return max(0.0, 1.0 - self.tokens_after / self.tokens_before)
 
     @property
     def tokens_saved(self) -> int:

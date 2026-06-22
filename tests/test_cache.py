@@ -49,6 +49,21 @@ def test_cache_can_be_disabled():
         clear_cache()
 
 
+def test_tokenizer_change_invalidates_cache():
+    from leancontext.tokens import set_token_counter
+    clear_cache()
+    try:
+        set_token_counter(lambda s: max(1, len(s) // 4))
+        a = reduce_text(_log())
+        set_token_counter(lambda s: max(1, len(s) // 2))   # changing tokenizer must drop the cache
+        b = reduce_text(_log())
+        # recomputed with the new counter, not returned from the stale cache
+        assert b.tokens_before > a.tokens_before
+    finally:
+        set_token_counter(None)                            # restore auto-detection
+        clear_cache()
+
+
 def test_eviction_bounds_cache_size():
     clear_cache()
     old = CONFIG.cache_size

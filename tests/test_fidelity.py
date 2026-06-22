@@ -42,3 +42,9 @@ def test_html_fidelity_drops_when_visible_text_lost():
     assert fidelity_score(html, "Welcome to the dashboard\n\nordinary body paragraph", "html") == 1.0
     assert fidelity_score(html, "Welcome to the dashboard", "html") < 1.0   # body dropped
     assert fidelity_score(html, "", "html") < 1.0
+
+
+def test_table_fidelity_drops_when_row_lost():
+    original = "NAME   AGE\npod-a   1d\npod-b   2d\npod-c   3d"
+    assert fidelity_score(original, "NAME AGE\npod-a 1d\npod-b 2d\npod-c 3d", "table") == 1.0
+    assert fidelity_score(original, "NAME AGE\npod-a 1d\npod-c 3d", "table") < 1.0   # pod-b dropped
